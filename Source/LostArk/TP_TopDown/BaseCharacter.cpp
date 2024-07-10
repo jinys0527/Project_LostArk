@@ -11,7 +11,8 @@ ABaseCharacter::ABaseCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-
+	Stat.Dodge = 0.0f;
+	Stat.HitRate = 1.0f;
 }
 
 // Called when the game starts or when spawned
@@ -53,5 +54,19 @@ void ABaseCharacter::PlayHitReaction()
 
 void ABaseCharacter::Move()
 {
+}
+
+void ABaseCharacter::Attack()
+{
+}
+
+float ABaseCharacter::CalcDamage(float ATK, float Block)
+{
+	FString StrBlock = FString::Printf(TEXT(".2f"), Block);
+	Block = FCString::Atof(*StrBlock);
+
+	float FinalDamage = ATK * (Block * 100.f) / 10000.f;
+
+	return FinalDamage;
 }
 

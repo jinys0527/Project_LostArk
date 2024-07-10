@@ -24,6 +24,25 @@ public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
+	FStat Stat;
+
+	virtual void PlayDead();
+
+	virtual void PlayHitReaction();
+
+	virtual void Move();
+
+	virtual void Attack();
+
+	virtual void PlayResurrection();
+
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	void Resurrection();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<UAnimMontage> ResurrectionMontage;
+
 private:
 	/** Top down camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
