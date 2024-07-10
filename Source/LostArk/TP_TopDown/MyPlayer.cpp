@@ -13,6 +13,38 @@
 
 AMyPlayer::AMyPlayer()
 {
+	Super();
+
+	//HP, 생명력
+	Stat.HP = 3000.f;
+	Stat.HPCoefficient = 2.2f;
+	Stat.LifePoint = Stat.HP * Stat.HPCoefficient;
+	Stat.CurrentLifePoint = Stat.LifePoint;
+
+	//MP
+	Stat.MP = 1000.f;
+
+	//공격력
+	Stat.Ability = 4500.f;
+	Stat.WeaponATK = 3000.f;
+	Stat.ATK = (float)FMath::Sqrt(((double)Stat.Ability * (double)Stat.WeaponATK) / (double)6);
+
+	//방어력
+	Stat.DEFCoefficient = 1.1f;
+	Stat.ArmorDEF = 900.f;
+	Stat.DEF = Stat.DEFCoefficient * Stat.ArmorDEF;
+	Stat.Block = (Stat.DEF / (Stat.DEF + 6500.f)) * 100.f;
+
+	//치명타 관련
+	Stat.CriticalHitRate = 0.3f;
+	Stat.CriticalDamageIncrease = 2.0f;
+
+	//시너지
+	Stat.DamageIncrease = 1.0f;
+
+	//경험치
+	Stat.EXP = 0.0f;
+
 	// Set size for player capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -48,4 +80,67 @@ AMyPlayer::AMyPlayer()
 void AMyPlayer::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+}
+
+void AMyPlayer::PlayDead()
+{
+	//애니메이션
+}
+
+void AMyPlayer::PlayHitReaction()
+{
+	//애니메이션
+}
+
+void AMyPlayer::Move()
+{
+	//애니메이션
+}
+
+void AMyPlayer::Attack()
+{
+	//애니메이션
+}
+
+void AMyPlayer::PlayResurrection()
+{
+	//애니메이션
+}
+
+float AMyPlayer::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+	if (Stat.CurrentLifePoint > 0)
+	{
+		PlayHitReaction();
+		Stat.CurrentLifePoint -= Damage;
+
+	}
+	else
+	{
+		PlayDead();
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC)
+		{
+			PC->DisableInput(PC);
+			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+	}
+
+	return 0.0f;
+}
+
+void AMyPlayer::Resurrection()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		PlayResurrection();
+		Stat.CurrentLifePoint = Stat.LifePoint;
+		PC->EnableInput(PC);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
 }

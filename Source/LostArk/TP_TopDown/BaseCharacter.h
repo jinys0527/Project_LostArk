@@ -54,11 +54,16 @@ public:
 	TObjectPtr<UAnimMontage> MoveMontage;
 
 	UFUNCTION(BlueprintCallable)
-	void PlayDead();
+	virtual void PlayDead();
 
 	UFUNCTION(BlueprintCallable)
-	void PlayHitReaction();
+	virtual void PlayHitReaction();
 
 	UFUNCTION(BlueprintCallable)
-	void Move();
+	virtual void Move();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void Attack();
+
+	float CalcDamage(float ATK, float Block);
 };
