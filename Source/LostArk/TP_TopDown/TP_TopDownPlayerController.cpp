@@ -53,6 +53,8 @@ void ATP_TopDownPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::OnTouchTriggered);
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &ATP_TopDownPlayerController::OnTouchReleased);
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ATP_TopDownPlayerController::OnTouchReleased);
+
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::AttackTriggered);
 	}
 	else
 	{
@@ -122,4 +124,14 @@ void ATP_TopDownPlayerController::OnTouchReleased()
 {
 	bIsTouch = false;
 	OnSetDestinationReleased();
+}
+
+void ATP_TopDownPlayerController::AttackTriggered()
+{
+	APawn* ControlledPawn = GetPawn();
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
+	if (MyPlayer)
+	{
+		MyPlayer->Attack();
+	}
 }
