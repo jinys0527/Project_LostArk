@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Materials/Material.h"
 #include "GreatSword.h"
 #include "Engine/World.h"
@@ -120,10 +121,19 @@ void AMyPlayer::Attack()
 	{
 		EquipSword();
 	}
-	if (bIsEquipped)
+	else if (bIsEquipped)
 	{
-		UnEquipSword();
+		TimeCount = 0;
+		PlayAnimMontage(AttackMontage);
+
+		if (EquippedGreatSword->bIsAttack)
+		{
+			/*UGameplayStatics::ApplyDamage(
+
+			)*/
+		}
 	}
+	//单固瘤 贸府 + 困连 家券
 }
 
 void AMyPlayer::PlayResurrection()
@@ -180,6 +190,7 @@ void AMyPlayer::EquipSword()
 			PlayAnimMontage(EquipSwordMontage, 1.0f);
 			FTimerHandle TimerHandle;
 			float GravityTime = 0.6f;
+			GetWorld()->GetTimerManager().SetTimer(StepHandle, this, &AMyPlayer::OnTimer, 1.0f, true);
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
 				{
 					FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
@@ -187,7 +198,6 @@ void AMyPlayer::EquipSword()
 					bIsEquipped = true;
 					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 				}), GravityTime, false);
-			
 		}
 	}
 }
@@ -227,5 +237,28 @@ void AMyPlayer::AttachSword()
 			FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 			EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Socket"));
 		}
+	}
+}
+
+void AMyPlayer::OnTimer()
+{
+	++TimeCount;
+
+	if (TimeCount >= 5)
+	{
+		UnEquipSword();
+		GetWorld()->GetTimerManager().ClearTimer(StepHandle);
+		TimeCount = 0;
+	}
+}
+
+void AMyPlayer::EquipTimer()
+{
+	++EquipTimeCount;
+
+	if (TimeCount >= 2)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(DrawHandle);
+		EquipTimeCount = 0;
 	}
 }

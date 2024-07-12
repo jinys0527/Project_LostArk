@@ -42,7 +42,7 @@ public:
 	TObjectPtr<UAnimationAsset> IdleAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<UAnimationAsset> AttackAnimation;
+	TObjectPtr<UAnimMontage> AttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactionMontage;
