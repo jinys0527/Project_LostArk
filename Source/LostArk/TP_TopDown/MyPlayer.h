@@ -58,7 +58,19 @@ public:
 
 	uint8 bIsEquipped : 1;
 
-	float StepTimer; //장착시 타이머 시작 -> 공격 안들어가는 순간마다 타이머를 재고 일정 시간뒤에 장착 해제
+	float DrawTimer;
+
+	FTimerHandle DrawHandle;
+
+	void OnTimer();
+
+	void EquipTimer();
+
+	int32 TimeCount;
+
+	int32 EquipTimeCount;
+
+	FTimerHandle StepHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> EquipSwordMontage;
@@ -78,4 +90,3 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 };
-

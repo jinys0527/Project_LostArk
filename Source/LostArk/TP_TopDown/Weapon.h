@@ -18,7 +18,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float WeaponATK;
 
-	virtual void Attack();
+	UFUNCTION()
+	virtual void OnOverlapBegin(
+		UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep,
+		const FHitResult& SweepResult
+	);
+	
+	UFUNCTION()
+	virtual void OnOverlapEnd(
+		UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex
+	);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
+	uint8 bIsAttack : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UStaticMeshComponent> Weapon;
