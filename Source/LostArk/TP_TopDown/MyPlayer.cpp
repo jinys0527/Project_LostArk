@@ -9,12 +9,11 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Materials/Material.h"
+#include "GreatSword.h"
 #include "Engine/World.h"
 
-AMyPlayer::AMyPlayer()
+AMyPlayer::AMyPlayer() : ABaseCharacter()
 {
-	Super();
-
 	//HP, 생명력
 	Stat.HP = 3000.f;
 	Stat.HPCoefficient = 2.2f;
@@ -26,8 +25,8 @@ AMyPlayer::AMyPlayer()
 
 	//공격력
 	Stat.Ability = 4500.f;
-	Stat.WeaponATK = 3000.f;
-	Stat.ATK = (float)FMath::Sqrt(((double)Stat.Ability * (double)Stat.WeaponATK) / (double)6);
+	WeaponATK = 1.0f;
+	Stat.ATK = (float)FMath::Sqrt(((double)Stat.Ability * (double)WeaponATK) / (double)6);
 
 	//방어력
 	Stat.DEFCoefficient = 1.1f;
@@ -44,6 +43,15 @@ AMyPlayer::AMyPlayer()
 
 	//경험치
 	Stat.EXP = 0.0f;
+
+	bIsEquipped = false;
+
+	static ConstructorHelpers::FClassFinder<AGreatSword> GreatSword(TEXT("/Script/Engine.Blueprint'/Game/Weapons/Blueprints/BP_GreatSword.BP_GreatSword_C'"));
+
+	if (GreatSword.Succeeded() && GreatSword.Class != NULL)
+	{
+		GreatSwordClass = GreatSword.Class;
+	}
 
 	// Set size for player capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -77,6 +85,14 @@ AMyPlayer::AMyPlayer()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 }
 
+void AMyPlayer::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AttachSword();
+	
+}
+
 void AMyPlayer::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
@@ -100,6 +116,14 @@ void AMyPlayer::Move()
 void AMyPlayer::Attack()
 {
 	//애니메이션
+	if (!bIsEquipped)
+	{
+		EquipSword();
+	}
+	if (bIsEquipped)
+	{
+		UnEquipSword();
+	}
 }
 
 void AMyPlayer::PlayResurrection()
@@ -142,5 +166,66 @@ void AMyPlayer::Resurrection()
 		PC->EnableInput(PC);
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+}
+
+void AMyPlayer::EquipSword()
+{
+	//애니메이션 + 소켓 위치 잡아서 Attach
+
+	if (GreatSwordClass)
+	{
+		if (EquippedGreatSword)
+		{
+			PlayAnimMontage(EquipSwordMontage, 1.0f);
+			FTimerHandle TimerHandle;
+			float GravityTime = 0.6f;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
+				{
+					FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+					EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Right"));
+					bIsEquipped = true;
+					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+				}), GravityTime, false);
+			
+		}
+	}
+}
+
+void AMyPlayer::UnEquipSword()
+{
+	//애니메이션 + Deattach
+	if (GreatSwordClass)
+	{
+		if (EquippedGreatSword)
+		{
+			PlayAnimMontage(UnEquipSwordMontage, 1.0f);
+			FTimerHandle TimerHandle;
+			float GravityTime = 0.6f;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
+				{
+					FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+					EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Socket"));
+					bIsEquipped = false;
+					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+				}), GravityTime, false);
+		}
+	}
+}
+
+void AMyPlayer::AttachSword()
+{
+	if (GreatSwordClass)
+	{
+		FVector SpawnLocation = FVector::ZeroVector;
+		FRotator SpawnRotation = FRotator::ZeroRotator;
+
+		EquippedGreatSword = GetWorld()->SpawnActor<AGreatSword>(GreatSwordClass, SpawnLocation, SpawnRotation);
+		if (EquippedGreatSword)
+		{
+			WeaponATK = EquippedGreatSword->WeaponATK;
+			FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+			EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Socket"));
+		}
 	}
 }

@@ -34,9 +34,6 @@ public:
 	float ATK;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
-	float WeaponATK;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float Ability;
 
 	//방어력 관련

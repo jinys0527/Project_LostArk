@@ -3,10 +3,8 @@
 
 #include "Monster.h"
 
-AMonster::AMonster()
+AMonster::AMonster() : ABaseCharacter()
 {
-	Super();
-
 	//HP, ปýธํทย
 	Stat.LifePoint = 5000.f;
 	Stat.CurrentLifePoint = Stat.LifePoint;
