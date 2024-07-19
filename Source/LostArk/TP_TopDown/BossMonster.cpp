@@ -6,8 +6,8 @@
 ABossMonster::ABossMonster() : AMonster()
 {
 	//HP, 생명력
-	Stat.LifePoint = Super::Stat.LifePoint * 2.25f;
-	Stat.CurrentLifePoint = Stat.LifePoint;
+	Stat.MaxLifePoint = Super::Stat.MaxLifePoint * 2.25f;
+	Stat.CurrentLifePoint = Stat.MaxLifePoint;
 
 	//공격력
 	Stat.ATK = Super::Stat.ATK * 2.25f;

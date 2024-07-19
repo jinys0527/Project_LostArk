@@ -36,6 +36,8 @@ public:
 
 	FStat Stat;
 
+	FString Name;
+
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

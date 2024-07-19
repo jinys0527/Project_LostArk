@@ -18,15 +18,15 @@ AMyPlayer::AMyPlayer() : ABaseCharacter()
 	//HP, 생명력
 	Stat.HP = 3000.f;
 	Stat.HPCoefficient = 2.2f;
-	Stat.LifePoint = Stat.HP * Stat.HPCoefficient;
-	Stat.CurrentLifePoint = Stat.LifePoint;
+	Stat.MaxLifePoint = Stat.HP * Stat.HPCoefficient;
+	Stat.CurrentLifePoint = Stat.MaxLifePoint;
 
 	//MP
 	Stat.MP = 1000.f;
 
 	//공격력
 	Stat.Ability = 4500.f;
-	WeaponATK = 1.0f;
+	WeaponATK = 3000.0f;
 	Stat.ATK = (float)FMath::Sqrt(((double)Stat.Ability * (double)WeaponATK) / (double)6);
 
 	//방어력
@@ -46,6 +46,8 @@ AMyPlayer::AMyPlayer() : ABaseCharacter()
 	Stat.EXP = 0.0f;
 
 	bIsEquipped = false;
+
+	bIsAttacking = false;
 
 	static ConstructorHelpers::FClassFinder<AGreatSword> GreatSword(TEXT("/Script/Engine.Blueprint'/Game/Weapons/Blueprints/BP_GreatSword.BP_GreatSword_C'"));
 
@@ -121,17 +123,14 @@ void AMyPlayer::Attack()
 	{
 		EquipSword();
 	}
-	else if (bIsEquipped)
+	else if (bIsEquipped) //장착한 상태일때
 	{
+		if (bIsAttacking) // 공격중이면 return
+		{
+			return;
+		}
 		TimeCount = 0;
 		PlayAnimMontage(AttackMontage);
-
-		if (EquippedGreatSword->bIsAttack)
-		{
-			/*UGameplayStatics::ApplyDamage(
-
-			)*/
-		}
 	}
 	//데미지 처리 + 위젯 소환
 }
@@ -172,7 +171,7 @@ void AMyPlayer::Resurrection()
 	if (PC)
 	{
 		PlayResurrection();
-		Stat.CurrentLifePoint = Stat.LifePoint;
+		Stat.CurrentLifePoint = Stat.MaxLifePoint;
 		PC->EnableInput(PC);
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);

@@ -45,6 +45,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* SetDestinationTouchAction;
 
+	virtual void Tick(float DeltaSeconds) override;
+
+	FTimerHandle LineTraceTimerHandle;
+
+	float LineTracePeriod = 0.1f;
+
+	void CheckMouseOver();
+
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;

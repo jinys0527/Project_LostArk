@@ -62,10 +62,7 @@ void ABaseCharacter::Attack()
 
 float ABaseCharacter::CalcDamage(float ATK, float Block)
 {
-	FString StrBlock = FString::Printf(TEXT(".2f"), Block);
-	Block = FCString::Atof(*StrBlock);
-
-	float FinalDamage = ATK * (Block * 100.f) / 10000.f;
+	float FinalDamage = ATK * Block / 100.f;
 
 	return FinalDamage;
 }

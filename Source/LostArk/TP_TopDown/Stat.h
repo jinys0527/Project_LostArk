@@ -14,7 +14,7 @@ public:
 	float CurrentLifePoint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
-	float LifePoint;
+	float MaxLifePoint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float HPCoefficient;

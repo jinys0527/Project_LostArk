@@ -8,6 +8,18 @@
 #include "MyPlayer.generated.h"
 
 
+UENUM(BlueprintType)
+enum class EPlayerState : uint8
+{
+	Idle,
+	Attacking,
+	Dashing,
+	Stunned,
+	Skilling,
+	GetHitting,
+	Down
+};
+
 UCLASS(Blueprintable)
 class AMyPlayer : public ABaseCharacter
 {
@@ -58,7 +70,11 @@ public:
 
 	uint8 bIsEquipped : 1;
 
-	float DrawTimer;
+	uint8 bIsAttacking : 1;
+
+	uint8 bIsAttack : 1;
+
+	float DrawTimer;	//칼 빼는 시간을 위한 타이머
 
 	FTimerHandle DrawHandle;
 

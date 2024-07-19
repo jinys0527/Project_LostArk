@@ -35,9 +35,6 @@ public:
 		int32 OtherBodyIndex
 	);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
-	uint8 bIsAttack : 1;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<class UStaticMeshComponent> Weapon;
 

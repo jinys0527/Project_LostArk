@@ -6,8 +6,8 @@
 ANamedMonster::ANamedMonster() : AMonster()
 {
 	//HP, 생명력
-	Stat.LifePoint = Super::Stat.LifePoint * 1.5f;
-	Stat.CurrentLifePoint = Stat.LifePoint;
+	Stat.MaxLifePoint = Super::Stat.MaxLifePoint * 1.5f;
+	Stat.CurrentLifePoint = Stat.MaxLifePoint;
 
 	//공격력
 	Stat.ATK = Super::Stat.ATK * 1.5f;
