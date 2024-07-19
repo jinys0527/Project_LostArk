@@ -21,8 +21,6 @@ AGreatSword::AGreatSword() : AWeapon()
 	Weapon->OnComponentBeginOverlap.AddDynamic(this, &Super::OnOverlapBegin);
 	Weapon->OnComponentEndOverlap.AddDynamic(this, &Super::OnOverlapEnd);
 
-	bIsAttack = false;
-
 	if (SM_Weapon.Succeeded())
 	{
 		Weapon->SetStaticMesh(SM_Weapon.Object);
@@ -39,9 +37,9 @@ void AGreatSword::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	AMyPlayer* Player = Cast<AMyPlayer>(Character);
 
 	AMonster* Monster = Cast<AMonster>(OtherActor);
-	if (Monster)
+	if (Monster && Player->bIsAttack)
 	{
-		UGameplayStatics::ApplyDamage(Monster, Player->CalcDamage(Player->Stat.ATK, Monster->Stat.Block), PC, this, UDamageType::StaticClass());
+		UGameplayStatics::ApplyDamage(Monster, Player->CalcDamage(Player->Stat.ATK, 100.f - Monster->Stat.Block), PC, this, UDamageType::StaticClass());
 	}
 }
 

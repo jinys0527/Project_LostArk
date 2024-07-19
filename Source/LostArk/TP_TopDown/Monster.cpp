@@ -2,12 +2,26 @@
 
 
 #include "Monster.h"
+#include "GameFramework/Character.h"
+#include "TP_TopDownPlayerController.h"
+#include "Kismet/GameplayStatics.h"
+#include "Blueprint/UserWidget.h"
+#include "PlayerHUD.h"
+#include "HeadMountHPWidget.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 
 AMonster::AMonster() : ABaseCharacter()
 {
+	//HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBar"));
+	//HPBarWidget->SetupAttachment(RootComponent);
+	//HPBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	////HPBarWidget->SetDrawAtDesiredSize(true);
+	//HPBarWidget->SetVisibility(true);
+
 	//HP, 생명력
-	Stat.LifePoint = 5000.f;
-	Stat.CurrentLifePoint = Stat.LifePoint;
+	Stat.MaxLifePoint = 5000.f;
+	Stat.CurrentLifePoint = Stat.MaxLifePoint;
 
 	//공격력
 	Stat.ATK = 300.f;
@@ -22,11 +36,18 @@ AMonster::AMonster() : ABaseCharacter()
 
 void AMonster::PlayDead()
 {
+	int32 RandomNumber = FMath::RandRange(1, 2);
+	FString SectionName = FString::Printf(TEXT("Death_%d"), RandomNumber);
+	UE_LOG(LogTemp, Warning, TEXT("Death"));
+	PlayAnimMontage(DeathMontage, 1.0f, FName(*SectionName));
 	//애니메이션
 }
 
 void AMonster::PlayHitReaction()
 {
+	int32 RandomNumber = FMath::RandRange(1, 2);
+	FString SectionName = FString::Printf(TEXT("HitReaction_%d"), RandomNumber);
+	PlayAnimMontage(HitReactionMontage, 1.0f, FName(*SectionName));
 	//애니메이션
 }
 
@@ -48,12 +69,31 @@ float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 	{
 		PlayHitReaction();
 		Stat.CurrentLifePoint -= Damage;
-
+		UE_LOG(LogTemp, Warning, TEXT("%f"), Stat.CurrentLifePoint);
 	}
 	else
 	{
 		PlayDead();
+		//콜리젼 해제 + Destroy
 	}
 
 	return 0.0f;
+}
+
+void AMonster::BeginPlay()
+{
+	Super::BeginPlay();
+	/*UE_LOG(LogTemp, Warning, TEXT("TEST"));
+	if (HPWidgetClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("2"));
+		MonsterHPBar = CreateWidget<UHPWidget>(GetWorld(), HPWidgetClass);
+
+		if (MonsterHPBar)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("3"));
+			HPBarWidget->SetWidget(MonsterHPBar);
+			UE_LOG(LogTemp, Warning, TEXT("1"));
+		}
+	}*/
 }

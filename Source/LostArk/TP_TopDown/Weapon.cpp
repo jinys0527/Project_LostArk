@@ -3,6 +3,8 @@
 
 #include "Weapon.h"
 #include "Monster.h"
+#include "MyPlayer.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -13,16 +15,12 @@ AWeapon::AWeapon()
 
 void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	AMonster* Monster = Cast<AMonster>(OtherActor);
-	if (Monster)
-	{
-		bIsAttack = true;
-	}
+
 }
 
 void AWeapon::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	bIsAttack = false;
+
 }
 
 // Called when the game starts or when spawned

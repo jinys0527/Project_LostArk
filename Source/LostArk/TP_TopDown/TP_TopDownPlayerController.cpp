@@ -6,6 +6,7 @@
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "MyPlayer.h"
+#include "Monster.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
@@ -19,13 +20,63 @@ ATP_TopDownPlayerController::ATP_TopDownPlayerController()
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 	CachedDestination = FVector::ZeroVector;
+	PrimaryActorTick.bCanEverTick = true;
 	FollowTime = 0.f;
 }
+
+
 
 void ATP_TopDownPlayerController::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+}
+
+void ATP_TopDownPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	CheckMouseOver();
+}
+
+void ATP_TopDownPlayerController::CheckMouseOver()
+{
+	//deprojectmousepositiontoworld, linetrace로 관성 추적해서
+	//캐릭터 충돌 하면
+	//이름 띄우게
+	//DeprojectMousePositionToWorld(FVector& WorldLocation, FVector& WorldDirection)
+	//LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+	//캐릭터의 주위에 Sphere Collision? 틱 0.1초 or linetrace 0.1초 단위
+	FVector WorldLocation, WorldDirection;
+
+	if (DeprojectMousePositionToWorld(WorldLocation, WorldDirection))
+	{
+		FVector Start = WorldLocation;
+		FVector End = WorldLocation + (WorldDirection * 10000.f);
+
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(GetPawn());
+
+		bool bHit;
+		GetWorld()->GetTimerManager().SetTimer(LineTraceTimerHandle, FTimerDelegate::CreateLambda([&]()
+			{
+				bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+				GetWorld()->GetTimerManager().ClearTimer(LineTraceTimerHandle);
+			}), LineTracePeriod, false);
+
+		if (bHit)
+		{
+			AActor* HitActor = HitResult.GetActor();
+			if (HitActor && HitActor->IsA(AMonster::StaticClass()))
+			{
+				AMonster* Monster = Cast<AMonster>(HitActor);
+				if (Monster)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Monster"));
+				}
+			}
+		}
+	}
 }
 
 void ATP_TopDownPlayerController::SetupInputComponent()
