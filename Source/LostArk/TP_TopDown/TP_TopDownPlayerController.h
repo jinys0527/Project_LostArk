@@ -11,6 +11,9 @@
 class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
+class ANamedMonster;
+class AMonster;
+class APlayerHUD;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -45,13 +48,27 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* SetDestinationTouchAction;
 
-	virtual void Tick(float DeltaSeconds) override;
-
 	FTimerHandle LineTraceTimerHandle;
 
 	float LineTracePeriod = 0.1f;
 
+	UFUNCTION()
 	void CheckMouseOver();
+
+	UFUNCTION()
+	void HandleHUDCommonMonster(APlayerHUD* PlayerHUD, AMonster* Monster);
+
+	UFUNCTION()
+	void HandleHUDNamedMonster(APlayerHUD* PlayerHUD, ANamedMonster* NamedMonster);
+
+
+	TSubclassOf<AMonster> MonsterClass;
+
+	TSubclassOf<ANamedMonster> NamedClass;
+
+	static int32 MonsterWidgetCount;
+
+	static int32 NamedWidgetCount;
 
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
