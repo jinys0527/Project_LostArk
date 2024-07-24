@@ -5,15 +5,25 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
-#include "MyPlayer.h"
-#include "Monster.h"
+#include "../Player/MyPlayer.h"
+#include "../Monster/Monster.h"
+#include "../Monster/NamedMonster.h"
 #include "Engine/World.h"
+#include "../Player/PlayerHUD.h"
+#include "../Widget/MonsterNamedHPWidget.h"
+#include "../Widget/MonsterCommonHPWidget.h"
+#include "../Widget/MonsterBossHPWidget.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/LocalPlayer.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
+
+int32 ATP_TopDownPlayerController::MonsterWidgetCount = 0;
+
+int32 ATP_TopDownPlayerController::NamedWidgetCount = 0;
 
 ATP_TopDownPlayerController::ATP_TopDownPlayerController()
 {
@@ -22,6 +32,18 @@ ATP_TopDownPlayerController::ATP_TopDownPlayerController()
 	CachedDestination = FVector::ZeroVector;
 	PrimaryActorTick.bCanEverTick = true;
 	FollowTime = 0.f;
+
+	static ConstructorHelpers::FClassFinder<AMonster> MonsterBlueprint(TEXT("/Script/Engine.Blueprint'/Game/Monsters/Blueprints/BP_Common'"));
+	if (MonsterBlueprint.Class)
+	{
+		MonsterClass = MonsterBlueprint.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<ANamedMonster> NamedBlueprint(TEXT("/ Script / Engine.Blueprint'/Game/Monsters/Blueprints/BP_Named'"));
+	if (NamedBlueprint.Class)
+	{
+		NamedClass = NamedBlueprint.Class;
+	}
 }
 
 
@@ -30,12 +52,8 @@ void ATP_TopDownPlayerController::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-}
 
-void ATP_TopDownPlayerController::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-	CheckMouseOver();
+	GetWorldTimerManager().SetTimer(LineTraceTimerHandle, this, &ATP_TopDownPlayerController::CheckMouseOver, 0.1f, true);
 }
 
 void ATP_TopDownPlayerController::CheckMouseOver()
@@ -57,23 +75,154 @@ void ATP_TopDownPlayerController::CheckMouseOver()
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(GetPawn());
 
-		bool bHit;
-		GetWorld()->GetTimerManager().SetTimer(LineTraceTimerHandle, FTimerDelegate::CreateLambda([&]()
-			{
-				bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
-				GetWorld()->GetTimerManager().ClearTimer(LineTraceTimerHandle);
-			}), LineTracePeriod, false);
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
 
 		if (bHit)
 		{
 			AActor* HitActor = HitResult.GetActor();
-			if (HitActor && HitActor->IsA(AMonster::StaticClass()))
+			APlayerHUD* PlayerHUD = Cast<APlayerHUD>(GetHUD());
+			if (PlayerHUD)
 			{
-				AMonster* Monster = Cast<AMonster>(HitActor);
-				if (Monster)
+				if (HitActor)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Monster"));
+					if (HitActor->IsA(NamedClass))
+					{
+						ANamedMonster* NamedMonster = Cast<ANamedMonster>(HitActor);
+						if (NamedMonster)
+						{
+							HandleHUDNamedMonster(PlayerHUD, NamedMonster);
+						}
+					}
+
+					else if (HitActor->IsA(MonsterClass))
+					{
+						AMonster* Monster = Cast<AMonster>(HitActor);
+						if (Monster)
+						{
+							HandleHUDCommonMonster(PlayerHUD, Monster);
+						}
+					}
 				}
+			}
+		}
+	}
+}
+
+void ATP_TopDownPlayerController::HandleHUDCommonMonster(APlayerHUD* PlayerHUD, AMonster* Monster)
+{
+	if (PlayerHUD->CommonHPClass)
+	{
+		if (PlayerHUD->BossHP && PlayerHUD->BossHP->GetVisibility() == ESlateVisibility::Hidden)
+		{
+			if (PlayerHUD->NamedHP)
+			{
+				PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
+			}
+			if (PlayerHUD->CommonHP && PlayerHUD->CommonHP->GetVisibility() == ESlateVisibility::Hidden)
+			{
+				PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
+			}
+			if (MonsterWidgetCount == 0)
+			{
+				PlayerHUD->CommonHP = CreateWidget<UMonsterCommonHPWidget>(this, PlayerHUD->CommonHPClass);
+				if (PlayerHUD->CommonHP)
+				{
+					PlayerHUD->CommonHP->AddToViewport();
+					PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
+					PlayerHUD->CommonHP->UpdateName(Monster->Name);
+				}
+			}
+			else
+			{
+				if (PlayerHUD->CommonHP)
+				{
+					if (PlayerHUD->CommonHP->GetCurrentHP() != Monster->Stat.CurrentLifePoint || PlayerHUD->CommonHP->GetMaxHP() != Monster->Stat.MaxLifePoint)
+					{
+						PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
+
+						if (PlayerHUD->CommonHP->GetCurrentHP() < 0.0f)
+						{
+							PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
+						}
+
+						else
+						{
+							PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
+						}
+					}
+					if (PlayerHUD->CommonHP->GetName() != Monster->Name)
+					{
+						PlayerHUD->CommonHP->UpdateName(Monster->Name);
+					}
+				}
+			}
+			++MonsterWidgetCount;
+		}
+		else if (PlayerHUD->BossHP)
+		{
+			if (PlayerHUD->CommonHP)
+			{
+				PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
+			}
+		}
+	}
+}
+
+void ATP_TopDownPlayerController::HandleHUDNamedMonster(APlayerHUD* PlayerHUD, ANamedMonster* NamedMonster)
+{
+	if (PlayerHUD && PlayerHUD->NamedHPClass)
+	{
+		if (PlayerHUD->BossHP && PlayerHUD->BossHP->GetVisibility() == ESlateVisibility::Hidden)
+		{
+			if (PlayerHUD->CommonHP)
+			{
+				PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
+			}
+			if (PlayerHUD->NamedHP && PlayerHUD->NamedHP->GetVisibility() == ESlateVisibility::Hidden)
+			{
+				PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
+			}
+			if (NamedWidgetCount == 0)
+			{
+				PlayerHUD->NamedHP = CreateWidget<UMonsterNamedHPWidget>(this, PlayerHUD->NamedHPClass);
+
+				if (PlayerHUD->NamedHP)
+				{
+					PlayerHUD->NamedHP->AddToViewport();
+					PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
+					PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
+				}
+			}
+			else
+			{
+				if (PlayerHUD->NamedHP->GetCurrentHP() != NamedMonster->Stat.CurrentLifePoint || PlayerHUD->NamedHP->GetMaxHP() != NamedMonster->Stat.MaxLifePoint)
+				{
+					PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
+
+					if (PlayerHUD->NamedHP->GetCurrentHP() < 0.0f)
+					{
+						PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
+					}
+
+					else
+					{
+						PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
+					}
+				}
+
+				if (PlayerHUD->NamedHP->GetName() != NamedMonster->Name)
+				{
+					PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
+				}
+			}
+			++NamedWidgetCount;
+		}
+		else if (PlayerHUD->BossHP)
+		{
+			if (PlayerHUD->NamedHP)
+			{
+				PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
+
 			}
 		}
 	}
@@ -123,7 +272,7 @@ void ATP_TopDownPlayerController::OnSetDestinationTriggered()
 {
 	// We flag that the input is being pressed
 	FollowTime += GetWorld()->GetDeltaSeconds();
-	
+
 	// We look for the location in the world where the player has pressed the input
 	FHitResult Hit;
 	bool bHitSuccessful = false;
@@ -141,25 +290,45 @@ void ATP_TopDownPlayerController::OnSetDestinationTriggered()
 	{
 		CachedDestination = Hit.Location;
 	}
-	
+
 	// Move towards mouse pointer or touch
 	APawn* ControlledPawn = GetPawn();
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
 	if (ControlledPawn != nullptr)
 	{
-		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
-		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+		if (MyPlayer->CurrentState == ECharacterState::Idle || MyPlayer->CurrentState == ECharacterState::Battle)
+		{
+			/*MyPlayer->SetPlayerState(ECharacterState::Moving);*/
+			FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
+			ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
+		}
 	}
 }
 
 void ATP_TopDownPlayerController::OnSetDestinationReleased()
 {
+	APawn* ControlledPawn = GetPawn();
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
 	// If it was a short press
 	if (FollowTime <= ShortPressThreshold)
 	{
 		// We move there and spawn some particles
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
+
 	}
+
+	/*if (MyPlayer != nullptr && MyPlayer->CurrentState == ECharacterState::Moving)
+	{
+		if (MyPlayer->bIsEquipped)
+		{
+			MyPlayer->SetPlayerState(ECharacterState::Battle);
+		}
+		else
+		{
+			MyPlayer->SetPlayerState(ECharacterState::Idle);
+		}
+	}*/
 
 	FollowTime = 0.f;
 }
