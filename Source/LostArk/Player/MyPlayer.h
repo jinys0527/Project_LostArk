@@ -101,6 +101,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> ResurrectionMontage;
 
+	UPROPERTY(Transient)
+	class UAnimInstance_Player* PlayerAnimInstance;
+
+	// 애니메이션 업데이트 함수
+	void UpdateAnimationInstance();
+
 private:
 	/** Top down camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))

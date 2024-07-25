@@ -255,6 +255,8 @@ void ATP_TopDownPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ATP_TopDownPlayerController::OnTouchReleased);
 
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::AttackTriggered);
+
+		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::InteractionTriggered);
 	}
 	else
 	{
@@ -354,4 +356,9 @@ void ATP_TopDownPlayerController::AttackTriggered()
 	{
 		MyPlayer->Attack();
 	}
+}
+
+void ATP_TopDownPlayerController::InteractionTriggered()
+{
+
 }

@@ -20,6 +20,7 @@
 #include "../Widget/MonsterCommonHPWidget.h"
 #include "NamedMonster.h"
 #include "BossMonster.h"
+#include "../TP_TopDown/ChaosDungeonGameState.h"
 
 AMonster::AMonster() : ABaseCharacter()
 {
@@ -187,9 +188,15 @@ void AMonster::Death()
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	ABossMonster* BossMonster = Cast<ABossMonster>(this);
 	ANamedMonster* NamedMonster = Cast<ANamedMonster>(this);
+	AGameStateBase* ContentState = GetWorld()->GetGameState();
+	if (ContentState)
+	{
+		AChaosDungeonGameState* ChaosDungeonState = Cast<AChaosDungeonGameState>(ContentState);
+	}
 	if (BossMonster)
 	{
 		PlayerHUD->BossHP->SetVisibility(ESlateVisibility::Hidden);
+
 	}
 	else if (NamedMonster)
 	{

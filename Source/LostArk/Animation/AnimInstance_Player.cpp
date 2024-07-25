@@ -4,18 +4,18 @@
 #include "AnimInstance_Player.h"
 #include "../Player/MyPlayer.h"
 
+void UAnimInstance_Player::UpdateAnimationProperties()
+{
+	if (Player)
+	{
+		bIsEquipped = Player->bIsEquipped;
+		bIsAttack = Player->bIsAttack;
+	}
+}
 
-//void UAnimInstance_Player::AnimNotify_EndWalk()
-//{
-//	UE_LOG(LogTemp, Warning, TEXT("%s"), WalkToRun ? TEXT("true") : TEXT("false"));
-//	AMyPlayer* MyPlayer = Cast<AMyPlayer>(TryGetPawnOwner());
-//
-//	if (WalkToRun)
-//	{
-//		WalkToRun = false;
-//	}
-//	else
-//	{
-//		WalkToRun = true;
-//	}
-//}
+void UAnimInstance_Player::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+
+	Player = Cast<AMyPlayer>(TryGetPawnOwner());
+}
