@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../Common/BaseCharacter.h"
+#include "MonsterType.h"
 #include "Monster.generated.h"
 
 class APlayerHUD;
@@ -51,7 +52,7 @@ public:
 
 	TSubclassOf<ABossMonster> BossClass;
 
-	uint8 bIsBoss : 1;
-
 	void Death();
+
+	EMonsterType MonsterType;
 };

@@ -24,4 +24,6 @@ ANamedMonster::ANamedMonster() : AMonster()
 	Name = "Named Monster";
 
 	HeadMountHPBarWidget->SetRelativeLocation(GetActorLocation() + FVector(0.f, 0.f, 120.f));
+
+	MonsterType = EMonsterType::Named;
 }
