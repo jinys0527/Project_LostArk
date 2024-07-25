@@ -15,8 +15,16 @@ class LOSTARK_API UAnimInstance_Player : public UAnimInstance
 	GENERATED_BODY()
 	
 public:
-	/*bool WalkToRun = true;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	uint8 bIsAttack : 1;
 
-	UFUNCTION()
-	void AnimNotify_EndWalk();*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	uint8 bIsEquipped : 1;
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void UpdateAnimationProperties();
+
+	virtual void NativeInitializeAnimation();
+
+	class AMyPlayer* Player;
 };

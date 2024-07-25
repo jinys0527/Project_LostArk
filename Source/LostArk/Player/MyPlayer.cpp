@@ -17,6 +17,8 @@
 #include "../TP_TopDown/TP_TopDownPlayerController.h"
 #include "../Widget/PlayerStatusWidget.h"
 #include "Components/TextBlock.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "../Animation/AnimInstance_Player.h"
 
 AMyPlayer::AMyPlayer() : ABaseCharacter()
 {
@@ -108,6 +110,11 @@ void AMyPlayer::BeginPlay()
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	PlayerHUD->PlayerStatus->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
 	PlayerHUD->PlayerStatus->UpdateMPBar(Stat.CurrentMP, Stat.MaxMP);
+
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		PlayerAnimInstance = Cast<UAnimInstance_Player>(MeshComp->GetAnimInstance());
+	}
 }
 
 void AMyPlayer::Tick(float DeltaSeconds)
@@ -274,6 +281,7 @@ void AMyPlayer::EquipSword()
 					FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 					EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Right"));
 					bIsEquipped = true;
+					UpdateAnimationInstance();
 					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 				}), GravityTime, false); //칼을 뽑는 시점을 맞추기 위한 타이머
 		}
@@ -296,6 +304,7 @@ void AMyPlayer::UnEquipSword()
 					FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 					EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Socket"));
 					bIsEquipped = false;
+					UpdateAnimationInstance();
 					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 				}), GravityTime, false);
 		}
@@ -340,5 +349,13 @@ void AMyPlayer::EquipTimer()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(DrawHandle);
 		EquipTimeCount = 0;
+	}
+}
+
+void AMyPlayer::UpdateAnimationInstance()
+{
+	if (PlayerAnimInstance)
+	{
+		PlayerAnimInstance->UpdateAnimationProperties();
 	}
 }

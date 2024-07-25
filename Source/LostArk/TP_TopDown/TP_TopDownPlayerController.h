@@ -48,6 +48,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* SetDestinationTouchAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* InteractionAction;
+
 	FTimerHandle LineTraceTimerHandle;
 
 	float LineTracePeriod = 0.1f;
@@ -86,6 +89,7 @@ protected:
 	void OnTouchTriggered();
 	void OnTouchReleased();
 	void AttackTriggered();
+	void InteractionTriggered();
 
 private:
 	FVector CachedDestination;
