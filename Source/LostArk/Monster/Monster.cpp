@@ -53,7 +53,7 @@ AMonster::AMonster() : ABaseCharacter()
 		HeadMountHPBarWidget->SetWidgetClass(WidgetClassFinder.Class);
 	}
 
-	bIsBoss = false;
+	MonsterType = EMonsterType::Common;
 }
 
 void AMonster::PlayDead()
@@ -135,7 +135,7 @@ float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 					GetWorld()->GetTimerManager().SetTimer(ClearTimer, this, &AMonster::ClearDamage, ClearTime, false);
 				}
 			}
-			if (bIsBoss)
+			if (MonsterType == EMonsterType::Boss)
 			{
 				if (PlayerHUD->BossHP)
 				{
@@ -154,7 +154,7 @@ float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 		}
 	}
 
-	if (HeadMountHPBarWidget && bIsBoss == false)
+	if (HeadMountHPBarWidget && MonsterType != EMonsterType::Boss)
 	{
 		HeadMountHPBarWidget->SetHiddenInGame(false);
 		UpdateHeadMountHP(Stat.CurrentLifePoint, Stat.MaxLifePoint);
@@ -186,19 +186,19 @@ void AMonster::Death()
 	K2_DestroyActor();
 	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
-	ABossMonster* BossMonster = Cast<ABossMonster>(this);
-	ANamedMonster* NamedMonster = Cast<ANamedMonster>(this);
 	AGameStateBase* ContentState = GetWorld()->GetGameState();
 	if (ContentState)
 	{
 		AChaosDungeonGameState* ChaosDungeonState = Cast<AChaosDungeonGameState>(ContentState);
+		ChaosDungeonState->IncreaseKillCount(MonsterType);
 	}
-	if (BossMonster)
+
+	if (MonsterType == EMonsterType::Boss)
 	{
 		PlayerHUD->BossHP->SetVisibility(ESlateVisibility::Hidden);
 
 	}
-	else if (NamedMonster)
+	else if (MonsterType == EMonsterType::Named)
 	{
 		PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
 	}

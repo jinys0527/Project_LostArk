@@ -30,7 +30,7 @@ ABossMonster::ABossMonster() : AMonster()
 
 	Name = "Boss Monster";
 
-	bIsBoss = true;
+	MonsterType = EMonsterType::Boss;
 }
 
 void ABossMonster::BeginPlay()
