@@ -36,7 +36,7 @@ void UBTService_FindNearestTarget::FindNearestTarget(UBehaviorTreeComponent& Own
 
 		for (AActor* Actor : TaggedActors)
 		{
-			float DistanceSq = FVector::DistSquared(AILocation, Actor->GetActorLocation());
+			float DistanceSq = FVector::Dist(AILocation, Actor->GetActorLocation());
 			if (DistanceSq < NearestDistance)
 			{
 				NearestDistance = DistanceSq;

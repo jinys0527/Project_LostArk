@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "Kismet/GameplayStatics.h"
 #include "../Player/MyPlayer.h"
+#include "../Monster/Monster.h"
 
 UBTService_CalcDistToTarget::UBTService_CalcDistToTarget()
 {
@@ -15,8 +16,25 @@ UBTService_CalcDistToTarget::UBTService_CalcDistToTarget()
 void UBTService_CalcDistToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
-	
-	AMyPlayer* Player = Cast<AMyPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("TargettoFollow"));
+	AAIController* AIController = OwnerComp.GetAIOwner();
+	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
+	AMonster* Monster = Cast<AMonster>(AIController->GetPawn());
+	AMyPlayer* Player = Cast<AMyPlayer>(BlackboardComp->GetValueAsObject("TargettoFollow"));
+
+	if(AIController == nullptr)
+	{
+		return;
+	}
+
+	if(BlackboardComp == nullptr)
+	{
+		return;
+	}
+
+	if(Monster == nullptr)
+	{
+		return;
+	}
 
 	if (Player == nullptr)
 	{
@@ -24,7 +42,7 @@ void UBTService_CalcDistToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, ui
 	}
 
 	FVector PlayerLocation = Player->GetActorLocation();
-	FVector MonsterLocation = OwnerComp.GetBlackboardComponent()->GetOwner()->GetActorLocation();
+	FVector MonsterLocation = Monster->GetActorLocation();
 
 	float DistToTarget = FVector::Dist(MonsterLocation, PlayerLocation);
 	
