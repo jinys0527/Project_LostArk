@@ -23,10 +23,21 @@ public:
 	UImage* Frame;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Time;
+	UTextBlock* Min;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* Sec;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* TimeInfo;
 
-	void UpdateTime(float NewTime);
+	void UpdateTime();
+
+	void InitTime();
+
+	void StartTimer();
+
+	uint8 bIsEnd : 1;
+
+	FTimerHandle StageTimer;
 };

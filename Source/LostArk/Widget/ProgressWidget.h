@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "../Monster/MonsterType.h"
 #include "ProgressWidget.generated.h"
 
 class UProgressBar;
@@ -48,5 +49,5 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UImage* Line;
 
-	void UpdateProgress(float CurrentCount, float GoalCount);
+	void UpdateProgress(EMonsterType MonsterType);
 };

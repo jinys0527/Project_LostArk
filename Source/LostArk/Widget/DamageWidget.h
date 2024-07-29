@@ -28,4 +28,10 @@ public:
 	FVector2D DesiredSize;
 
 	virtual void SynchronizeProperties() override;
+
+	float ClearTime = 1.0f;
+
+	FTimerHandle ClearTimer;
+
+	void ClearDamage();
 };

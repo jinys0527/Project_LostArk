@@ -21,12 +21,26 @@ void UProgressWidget::NativeConstruct()
 	}
 }
 
-void UProgressWidget::UpdateProgress(float CurrentCount, float GoalCount)
+void UProgressWidget::UpdateProgress(EMonsterType MonsterType)
 {
-	float Ratio = CurrentCount / GoalCount;
-	float RatioPercent = Ratio * 100.0f;
-	int32 iRatioPercent = round(RatioPercent);
+	if (ChaosDungeonProgressBar)
+	{
+		float CurrentPercent = ChaosDungeonProgressBar->GetPercent();
+		switch (MonsterType)
+		{
+		case EMonsterType::Common:
+			CurrentPercent += 0.025;
+			break;
+		case EMonsterType::Named:
+			CurrentPercent += 0.05;
+			break;
+		case EMonsterType::Boss:
+			CurrentPercent += 0.1;
+			break;
+		}
+		int32 iCurrentPercent = round(CurrentPercent * 100);
 
-	ChaosDungeonProgressBar->SetPercent(Ratio);
-	ProgressValue->SetText(FText::FromString(FString::FromInt(iRatioPercent)));
+		ChaosDungeonProgressBar->SetPercent(CurrentPercent);
+		ProgressValue->SetText(FText::FromString(FString::FromInt(iCurrentPercent)));
+	}
 }

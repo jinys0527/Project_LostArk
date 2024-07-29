@@ -77,7 +77,4 @@ public:
 	UTimerWidget* Timer;
 
 	virtual void DrawHUD() override;
-
-	int32 SizeX;
-	int32 SizeY;
 };

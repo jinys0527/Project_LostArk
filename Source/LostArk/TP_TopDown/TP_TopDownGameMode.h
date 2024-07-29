@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "ChaosDungeonState.h"
 #include "TP_TopDownGameMode.generated.h"
+
+class AChaosDungeonGameState;
 
 UCLASS(minimalapi)
 class ATP_TopDownGameMode : public AGameModeBase
@@ -14,29 +15,8 @@ class ATP_TopDownGameMode : public AGameModeBase
 
 public:
 	ATP_TopDownGameMode();
-
-	EChaosDungeonGameState CurrentState;
-
-	void SetCurrentState(EChaosDungeonGameState NewState);
 	
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
-
-	void HandleGameState(EChaosDungeonGameState NewState);
-
-	void Loading();
-
-	void StartGame();
-
-	void StartStage1();
-
-	void StartStage2();
-
-	void StartStage3();
-
-	void EndGame();
 };
-
-
-

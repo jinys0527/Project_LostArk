@@ -8,7 +8,7 @@ public class LostArk : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "Niagara", "AIModule", "UMG" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "Niagara", "AIModule", "UMG", "GameplayTasks", "NavigationSystem" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

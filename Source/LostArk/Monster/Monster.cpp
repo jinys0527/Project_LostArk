@@ -20,7 +20,8 @@
 #include "../Widget/MonsterCommonHPWidget.h"
 #include "NamedMonster.h"
 #include "BossMonster.h"
-#include "../TP_TopDown/ChaosDungeonGameState.h"
+#include "../ChaosDungeon/ChaosDungeonGameState.h"
+#include "../Widget/ProgressWidget.h"
 
 AMonster::AMonster() : ABaseCharacter()
 {
@@ -131,8 +132,6 @@ float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 					wDamage->AddToViewport();
 					wDamage->UpdateDamage(RoundDamage);
 					wDamage->SetPositionInViewport(ScreenLocation, true);
-
-					GetWorld()->GetTimerManager().SetTimer(ClearTimer, this, &AMonster::ClearDamage, ClearTime, false);
 				}
 			}
 			if (MonsterType == EMonsterType::Boss)
@@ -147,6 +146,7 @@ float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 		if (Stat.CurrentLifePoint < 0)
 		{
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			isAlive = false;
 			PlayDead();
 			FTimerHandle DeathTimer;
 			GetWorld()->GetTimerManager().SetTimer(DeathTimer, this, &AMonster::Death, 1.5f, false);
@@ -186,24 +186,31 @@ void AMonster::Death()
 	K2_DestroyActor();
 	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
-	AGameStateBase* ContentState = GetWorld()->GetGameState();
-	if (ContentState)
-	{
-		AChaosDungeonGameState* ChaosDungeonState = Cast<AChaosDungeonGameState>(ContentState);
-		ChaosDungeonState->IncreaseKillCount(MonsterType);
-	}
+
+	AChaosDungeonGameState* DungeonState = GetWorld()->GetGameState<AChaosDungeonGameState>();
 
 	if (MonsterType == EMonsterType::Boss)
 	{
 		PlayerHUD->BossHP->SetVisibility(ESlateVisibility::Hidden);
-
+		--DungeonState->CurrentMonsterCount;
 	}
 	else if (MonsterType == EMonsterType::Named)
 	{
 		PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
+		--DungeonState->CurrentMonsterCount;
+		--DungeonState->StageNamedCount;
 	}
 	else
 	{
 		PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
+		--DungeonState->CurrentMonsterCount;
+	}
+
+	if (PlayerHUD->ProgressClass)
+	{
+		if (PlayerHUD->Progress)
+		{
+			PlayerHUD->Progress->UpdateProgress(MonsterType);
+		}
 	}
 }

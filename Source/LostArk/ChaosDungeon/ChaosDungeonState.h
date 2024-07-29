@@ -6,12 +6,13 @@
 #include "ChaosDungeonState.generated.h"
 
 UENUM(BlueprintType)
-enum class EChaosDungeonGameState : uint8
+enum class EDungeonState : uint8
 {
 	PreStart UMETA(DisplayName = "PreStart"),
 	Start UMETA(DisplayName = "Start"),
 	Stage1 UMETA(DisplayName = "Stage1"),
 	Stage2 UMETA(DisplayName = "Stage2"),
 	Stage3 UMETA(DisplayName = "Stage3"),
-	End UMETA(DisplayName = "End")
+	End UMETA(DisplayName = "End"),
+	Fail UMETA(DisplayName = "Fail")
 };

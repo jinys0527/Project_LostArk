@@ -47,6 +47,8 @@ public:
 
 	static int32 MoveWidgetCount;
 
+	void LoadLevel(FName LevelName);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
