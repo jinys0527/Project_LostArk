@@ -192,7 +192,7 @@ float AMyPlayer::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACont
 				wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.708376, 0.028426, 0.013702));
 				wDamage->DamageValue->SetShadowOffset(FVector2D(0, 0));
 				wDamage->DamageValue->SetShadowColorAndOpacity(FLinearColor::Transparent);
-				GetWorld()->GetTimerManager().SetTimer(ClearTimer, this, &AMyPlayer::ClearDamage, ClearTime, false);
+
 				FVector PlayerLocation = GetActorLocation();
 				FVector MonsterLocation = DamageCauser->GetActorLocation();
 
@@ -236,14 +236,15 @@ float AMyPlayer::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACont
 	}
 	else
 	{
-		PlayDead();
-		SetPlayerState(ECharacterState::Death);
 		if (PC)
 		{
 			PC->DisableInput(PC);
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
+		isAlive = false;
+		PlayDead();
+		SetPlayerState(ECharacterState::Death);
 	}
 
 	return 0.0f;

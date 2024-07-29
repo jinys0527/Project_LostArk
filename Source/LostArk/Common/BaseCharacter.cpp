@@ -21,7 +21,7 @@ ABaseCharacter::ABaseCharacter()
 		DamageClass = DamageBlueprint.Class;
 	}
 
-	ClearTime = 1.0f;
+	isAlive = true;
 }
 
 // Called when the game starts or when spawned
@@ -74,10 +74,4 @@ float ABaseCharacter::CalcDamage(float ATK, float Block)
 	float FinalDamage = ATK * Block / 100.f;
 
 	return FinalDamage;
-}
-
-void ABaseCharacter::ClearDamage()
-{
-	wDamage->RemoveFromParent();
-	wDamage = nullptr;
 }

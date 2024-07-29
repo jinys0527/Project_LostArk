@@ -54,7 +54,7 @@ APlayerHUD::APlayerHUD() : AHUD()
 	{
 		PlayerStatusClass = PlayerStatusBlueprint.Class;
 	}
-	
+
 	static ConstructorHelpers::FClassFinder<UProgressWidget> ProgressBlueprint(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/UI/HUD/WB_Progress'"));
 	if (ProgressBlueprint.Class)
 	{
@@ -94,5 +94,5 @@ void APlayerHUD::BeginPlay()
 
 void APlayerHUD::DrawHUD()
 {
-	
+	Super::DrawHUD();
 }

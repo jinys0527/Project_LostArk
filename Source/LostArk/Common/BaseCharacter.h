@@ -92,10 +92,6 @@ public:
 	UDamageWidget* wDamage;
 
 	FVector WidgetLocation;
-
-	float ClearTime;
-
-	FTimerHandle ClearTimer;
-
-	void ClearDamage();
+	
+	uint8 isAlive : 1;
 };

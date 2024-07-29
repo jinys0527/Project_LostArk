@@ -12,21 +12,27 @@
  * 
  */
 UCLASS()
-class LOSTARK_API AChaosDungeonGameState : public AGameState
+class LOSTARK_API AChaosDungeonGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 public:
 	AChaosDungeonGameState();
 
-	static int32 CommonKillCount;
+	int32 MonsterMaxSpawnLimit;
 
-	static int32 NamedKillCount;
+	int32 NamedMonsterMaxSpawnLimit;
 
-	static int32 BossKillCount;
+	int32 CurrentMonsterCount;
 
-	void IncreaseKillCount(EMonsterType MonsterType);
+	int32 StageCommonCount;
 
-	EChaosDungeonGameState CurrentState;
+	int32 StageNamedCount;
 
-	void SetCurrentState(EChaosDungeonGameState NewState);
+	int32 StageCommonLimit;
+
+	int32 StageNamedLimit;
+
+	EDungeonState CurrentState;
+
+	void SetCurrentState(EDungeonState NewState);
 };

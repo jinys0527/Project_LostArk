@@ -19,6 +19,13 @@ void UDamageWidget::NativeConstruct()
 void UDamageWidget::UpdateDamage(int32 Damage)
 {
 	SetDamage(Damage);
+
+	if (GetWorld()->GetTimerManager().IsTimerActive(ClearTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(ClearTimer);
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(ClearTimer, this, &UDamageWidget::ClearDamage, ClearTime, false);
 }
 
 void UDamageWidget::SetDamage(int32 Damage)
@@ -39,4 +46,11 @@ void UDamageWidget::SynchronizeProperties()
 	{
 		SetDesiredSizeInViewport(DesiredSize);
 	}
+}
+
+void UDamageWidget::ClearDamage()
+{
+	RemoveFromParent();
+
+	GetWorld()->GetTimerManager().ClearTimer(ClearTimer);
 }
