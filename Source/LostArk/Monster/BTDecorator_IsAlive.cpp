@@ -4,6 +4,7 @@
 #include "BTDecorator_IsAlive.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "../Monster/Monster.h"
+#include "AIController.h"
 
 UBTDecorator_IsAlive::UBTDecorator_IsAlive()
 {
@@ -12,7 +13,8 @@ UBTDecorator_IsAlive::UBTDecorator_IsAlive()
 
 bool UBTDecorator_IsAlive::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-	AMonster* Monster = Cast<AMonster>(OwnerComp.GetBlackboardComponent()->GetOwner());
+	AAIController* AIController = OwnerComp.GetAIOwner();
+	AMonster* Monster = Cast<AMonster>(AIController->GetPawn());
 
 	bool IsAlive = Monster->isAlive;
 
