@@ -15,4 +15,10 @@ class LOSTARK_API UAnimInstance_Monster : public UAnimInstance
 	GENERATED_BODY()
 public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
+	float Speed;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
+	uint8 bIsAlive : 1;
 };

@@ -26,6 +26,8 @@ AGreatSword::AGreatSword() : AWeapon()
 		Weapon->SetStaticMesh(SM_Weapon.Object);
 	}
 	WeaponATK = 3000.0f;
+
+	bIsOverlapped = false;
 }
 
 void AGreatSword::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -37,19 +39,31 @@ void AGreatSword::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	AMyPlayer* Player = Cast<AMyPlayer>(Character);
 
 	AMonster* Monster = Cast<AMonster>(OtherActor);
-	if (Monster && Player->bIsAttack)
+	if (Monster)
 	{
-		int32 RandomValue = FMath::RandRange(1, 10);
+		Player->Target.Add(Monster);
+		if (!Monster->bIsHitted && Player->bIsAttack)
+		{
+			int32 RandomValue = FMath::RandRange(1, 10);
 
-		if (RandomValue <= int32(round(Player->Stat.CriticalHitRate * 10)))
-		{
-			Player->bIsCritical = true;
-			UGameplayStatics::ApplyDamage(Monster, (Player->CalcDamage(Player->Stat.ATK, 100.f - Monster->Stat.Block))* Player->Stat.CriticalDamageIncrease, PC, Player, UDamageType::StaticClass());
+			if (RandomValue <= int32(round(Player->Stat.CriticalHitRate * 10)))
+			{
+				Player->bIsCritical = true;
+				UGameplayStatics::ApplyDamage(Monster, (Player->CalcDamage(Player->Stat.ATK, 100.f - Monster->Stat.Block)) * Player->Stat.CriticalDamageIncrease, PC, Player, UDamageType::StaticClass());
+				Monster->bIsHitted = true;
+				bIsOverlapped = true;
+			}
+			else
+			{
+				Player->bIsCritical = false;
+				UGameplayStatics::ApplyDamage(Monster, Player->CalcDamage(Player->Stat.ATK, 100.f - Monster->Stat.Block), PC, Player, UDamageType::StaticClass());
+				Monster->bIsHitted = true;
+				bIsOverlapped = true;
+			}
 		}
-		else
+		else if (Monster->bIsHitted && bIsOverlapped)
 		{
-			Player->bIsCritical = false;
-			UGameplayStatics::ApplyDamage(Monster, Player->CalcDamage(Player->Stat.ATK, 100.f - Monster->Stat.Block), PC, Player, UDamageType::StaticClass());
+			return;
 		}
 	}
 }

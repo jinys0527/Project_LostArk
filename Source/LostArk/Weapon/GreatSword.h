@@ -30,4 +30,6 @@ public:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex
 	) override;
+
+	uint8 bIsOverlapped : 1;
 };

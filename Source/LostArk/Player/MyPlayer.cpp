@@ -119,7 +119,7 @@ void AMyPlayer::BeginPlay()
 
 void AMyPlayer::Tick(float DeltaSeconds)
 {
-    Super::Tick(DeltaSeconds);
+	Super::Tick(DeltaSeconds);
 }
 
 void AMyPlayer::SetPlayerState(ECharacterState NewState)
@@ -129,48 +129,53 @@ void AMyPlayer::SetPlayerState(ECharacterState NewState)
 
 void AMyPlayer::PlayDead()
 {
-	//애니메이션
+	int32 RandomNumber = FMath::RandRange(1, 2);
+	FString SectionName = FString::Printf(TEXT("Death_%d"), RandomNumber);
+	PlayAnimMontage(DeathMontage, 1.0f, FName(*SectionName));
 }
 
 void AMyPlayer::PlayHitReaction()
 {
-	//애니메이션
-}
-
-void AMyPlayer::Move()
-{
-	//애니메이션
+	if (CurrentState == ECharacterState::Idle)
+	{
+		PlayAnimMontage(HitReactionMontage, 1.0f);
+	}
+	else if (CurrentState == ECharacterState::Battle)
+	{
+		PlayAnimMontage(HitReactionBattleMontage, 1.0f);
+	}
 }
 
 void AMyPlayer::Attack()
 {
 	//애니메이션
-	if (!bIsEquipped)
-	{
-		EquipSword();
-	}
-	else if (bIsEquipped) //장착한 상태일때
+	if (bIsEquipped) //장착한 상태일때
 	{
 		if (bIsAttacking) // 공격중이면 return
 		{
 			return;
 		}
 		else if (CurrentState != ECharacterState::Skilling &&
-				CurrentState != ECharacterState::Stunned && 
-				CurrentState != ECharacterState::Dashing && 
-				CurrentState != ECharacterState::GetHitting &&		
-				CurrentState != ECharacterState::Moving && 
-				CurrentState != ECharacterState::Idle)
+			CurrentState != ECharacterState::Stunned &&
+			CurrentState != ECharacterState::Dashing &&
+			CurrentState != ECharacterState::GetHitting &&
+			CurrentState != ECharacterState::Moving &&
+			CurrentState != ECharacterState::Idle)
 		{
 			TimeCount = 0;
 			PlayAnimMontage(AttackMontage);
 		}
 	}
+	else if (!bIsEquipped)
+	{
+		EquipSword();
+		return;
+	}
 }
 
 void AMyPlayer::PlayResurrection()
 {
-	//애니메이션
+	PlayAnimMontage(ResurrectionMontage);
 }
 
 float AMyPlayer::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -178,64 +183,64 @@ float AMyPlayer::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACont
 	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
-	
-	if (PlayerHUD)
-	{
-		if (DamageClass)
-		{
-			wDamage = CreateWidget<UDamageWidget>(PC, DamageClass);
-			if (wDamage)
-			{
-				wDamage->SynchronizeProperties();
-				wDamage->UpdateDamage(Damage);
-				wDamage->AddToViewport();
-				wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.708376, 0.028426, 0.013702));
-				wDamage->DamageValue->SetShadowOffset(FVector2D(0, 0));
-				wDamage->DamageValue->SetShadowColorAndOpacity(FLinearColor::Transparent);
-
-				FVector PlayerLocation = GetActorLocation();
-				FVector MonsterLocation = DamageCauser->GetActorLocation();
-
-				FVector DirectionVector = MonsterLocation - PlayerLocation;
-				DirectionVector.Normalize();
-
-				float DesiredDistance = 50.0f;
-				WidgetLocation = PlayerLocation + (DirectionVector * DesiredDistance);
-				
-				WidgetLocation.Z = 100.0f;
-
-				FVector2D ScreenLocation;
-				UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), WidgetLocation, ScreenLocation);
-
-				wDamage->SetPositionInViewport(ScreenLocation, true);
-			}
-		}
-		if (PlayerHUD->PlayerStatusClass)
-		{
-			if (PlayerHUD->PlayerStatus)
-			{
-				if (PlayerHUD->PlayerStatus->GetCurrentHP() != Stat.CurrentLifePoint)
-				{
-					PlayerHUD->PlayerStatus->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
-				}
-				if (PlayerHUD->PlayerStatus->GetCurrentMP() != Stat.CurrentMP)
-				{
-					PlayerHUD->PlayerStatus->UpdateMPBar(Stat.CurrentMP, Stat.MaxMP);
-				}
-			}
-		}
-	}
 
 	if (Stat.CurrentLifePoint > 0)
 	{
-		PlayHitReaction();
-		//노티파이로 맞는 시점에 CurrentState = ECharacterState::GetHitting
-		//일정시간 후 원래 State로
 		Stat.CurrentLifePoint -= Damage;
+		if (PlayerHUD)
+		{
+			if (DamageClass)
+			{
+				wDamage = CreateWidget<UDamageWidget>(PC, DamageClass);
+				if (wDamage)
+				{
+					wDamage->SynchronizeProperties();
+					wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.708376, 0.028426, 0.013702));
+					wDamage->DamageValue->SetShadowOffset(FVector2D(0, 0));
+					wDamage->DamageValue->SetShadowColorAndOpacity(FLinearColor::Transparent);
+
+					FVector PlayerLocation = GetActorLocation();
+					FVector MonsterLocation = DamageCauser->GetActorLocation();
+
+					FVector DirectionVector = MonsterLocation - PlayerLocation;
+					DirectionVector.Normalize();
+
+					float DesiredDistance = 30.0f;
+					WidgetLocation = PlayerLocation + (DirectionVector * DesiredDistance);
+
+					WidgetLocation.Z = 100.0f;
+
+					FVector2D ScreenLocation;
+					UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), WidgetLocation, ScreenLocation);
+
+					int32 RoundDamage = int32(round(Damage));
+					wDamage->AddToViewport();
+					wDamage->UpdateDamage(RoundDamage);
+					wDamage->SetPositionInViewport(ScreenLocation, true);
+				}
+			}
+			if (PlayerHUD->PlayerStatusClass)
+			{
+				if (PlayerHUD->PlayerStatus)
+				{
+					if (PlayerHUD->PlayerStatus->GetCurrentHP() != Stat.CurrentLifePoint)
+					{
+						PlayerHUD->PlayerStatus->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
+					}
+					if (PlayerHUD->PlayerStatus->GetCurrentMP() != Stat.CurrentMP)
+					{
+						PlayerHUD->PlayerStatus->UpdateMPBar(Stat.CurrentMP, Stat.MaxMP);
+					}
+				}
+			}
+		}
+
+		PlayHitReaction();
 
 	}
 	else
 	{
+		Tags.Remove(FName("Player"));
 		if (PC)
 		{
 			PC->DisableInput(PC);
@@ -256,6 +261,7 @@ void AMyPlayer::Resurrection()
 	if (PC)
 	{
 		PlayResurrection();
+		Tags.AddUnique(FName("Player"));
 		SetPlayerState(ECharacterState::Idle);
 		Stat.CurrentLifePoint = Stat.MaxLifePoint;
 		PC->EnableInput(PC);
@@ -272,42 +278,8 @@ void AMyPlayer::EquipSword()
 	{
 		if (EquippedGreatSword)
 		{
-			PlayAnimMontage(EquipSwordMontage, 1.0f);
-			FTimerHandle TimerHandle;
-			float GravityTime = 0.6f;
-			SetPlayerState(ECharacterState::Battle);
+			bIsEquipped = true;
 			GetWorld()->GetTimerManager().SetTimer(StepHandle, this, &AMyPlayer::OnTimer, 1.0f, true);
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
-				{
-					FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-					EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Right"));
-					bIsEquipped = true;
-					UpdateAnimationInstance();
-					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
-				}), GravityTime, false); //칼을 뽑는 시점을 맞추기 위한 타이머
-		}
-	}
-}
-
-void AMyPlayer::UnEquipSword()
-{
-	//애니메이션 + Deattach
-	if (GreatSwordClass)
-	{
-		if (EquippedGreatSword)
-		{
-			PlayAnimMontage(UnEquipSwordMontage, 1.0f);
-			FTimerHandle TimerHandle;
-			float GravityTime = 0.6f;
-			SetPlayerState(ECharacterState::Idle);
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()
-				{
-					FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-					EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Socket"));
-					bIsEquipped = false;
-					UpdateAnimationInstance();
-					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
-				}), GravityTime, false);
 		}
 	}
 }
@@ -334,29 +306,9 @@ void AMyPlayer::OnTimer()
 {
 	++TimeCount;
 
-	if (TimeCount >= 5)
+	if (TimeCount >= 6)
 	{
-		UnEquipSword();
 		GetWorld()->GetTimerManager().ClearTimer(StepHandle);
 		TimeCount = 0;
-	}
-}
-
-void AMyPlayer::EquipTimer()
-{
-	++EquipTimeCount;
-
-	if (TimeCount >= 2)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(DrawHandle);
-		EquipTimeCount = 0;
-	}
-}
-
-void AMyPlayer::UpdateAnimationInstance()
-{
-	if (PlayerAnimInstance)
-	{
-		PlayerAnimInstance->UpdateAnimationProperties();
 	}
 }

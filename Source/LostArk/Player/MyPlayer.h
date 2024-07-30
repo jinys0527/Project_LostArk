@@ -29,36 +29,23 @@ public:
 
 	ECharacterState CurrentState;
 
+	ECharacterState PrevState;
+
 	void SetPlayerState(ECharacterState NewState);
-
-	FString GetEnumValueAsString(ECharacterState EnumValue)
-	{
-		const UEnum* EnumPtr = StaticEnum<ECharacterState>();
-		if (!EnumPtr)
-		{
-			return FString("Invalid");
-		}
-
-		return EnumPtr->GetNameStringByValue((int64)EnumValue);
-	}
 
 	virtual void PlayDead();
 
-	virtual void PlayHitReaction();
+	virtual void PlayHitReaction() override;
 
-	virtual void Move();
+	virtual void Attack() override;
 
-	virtual void Attack();
-
-	virtual void PlayResurrection();
+	void PlayResurrection() ;
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	void Resurrection();
 
 	void EquipSword();
-
-	void UnEquipSword();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float WeaponATK;
@@ -84,11 +71,7 @@ public:
 
 	void OnTimer();
 
-	void EquipTimer();
-
 	int32 TimeCount;
-
-	int32 EquipTimeCount;
 
 	FTimerHandle StepHandle;
 
@@ -101,11 +84,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> ResurrectionMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<UAnimMontage> HitReactionBattleMontage;
+
 	UPROPERTY(Transient)
 	class UAnimInstance_Player* PlayerAnimInstance;
 
-	// 애니메이션 업데이트 함수
-	void UpdateAnimationInstance();
+	TArray<AActor*> Target;
 
 private:
 	/** Top down camera */

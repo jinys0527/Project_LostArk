@@ -22,6 +22,7 @@
 #include "BossMonster.h"
 #include "../ChaosDungeon/ChaosDungeonGameState.h"
 #include "../Widget/ProgressWidget.h"
+#include "../Animation/AnimInstance_Monster.h"
 
 AMonster::AMonster() : ABaseCharacter()
 {
@@ -44,6 +45,7 @@ AMonster::AMonster() : ABaseCharacter()
 	HeadMountHPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HeadMountHPBar"));
 	HeadMountHPBarWidget->SetupAttachment(RootComponent);
 	HeadMountHPBarWidget->SetDrawAtDesiredSize(true);
+	HeadMountHPBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
 	HeadMountHPBarWidget->SetRelativeLocation(GetActorLocation() + FVector(0.f, 0.f, 100.f));
 	HeadMountHPBarWidget->SetCastShadow(false);
 	HeadMountHPBarWidget->SetHiddenInGame(true);
@@ -55,33 +57,30 @@ AMonster::AMonster() : ABaseCharacter()
 	}
 
 	MonsterType = EMonsterType::Common;
+
+	bIsAttack = false;
+
+	bIsHitted = false;
 }
 
 void AMonster::PlayDead()
 {
-	ABaseCharacter::PlayDead();
 	int32 RandomNumber = FMath::RandRange(1, 2);
 	FString SectionName = FString::Printf(TEXT("Death_%d"), RandomNumber);
 	UE_LOG(LogTemp, Warning, TEXT("Death"));
 	PlayAnimMontage(DeathMontage, 1.0f, FName(*SectionName));
 }
 
+void AMonster::Attack()
+{
+	PlayAnimMontage(AttackMontage, 1.0f);
+}
+
 void AMonster::PlayHitReaction()
 {
-	ABaseCharacter::PlayHitReaction();
 	int32 RandomNumber = FMath::RandRange(1, 2);
 	FString SectionName = FString::Printf(TEXT("HitReaction_%d"), RandomNumber);
 	PlayAnimMontage(HitReactionMontage, 1.0f, FName(*SectionName));
-}
-
-void AMonster::Move()
-{
-	//애니메이션
-}
-
-void AMonster::Attack()
-{
-	//애니메이션
 }
 
 float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -166,7 +165,7 @@ float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 void AMonster::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 void AMonster::UpdateHeadMountHP(float CurrentHP, float MaxHP)
@@ -213,4 +212,9 @@ void AMonster::Death()
 			PlayerHUD->Progress->UpdateProgress(MonsterType);
 		}
 	}
+}
+
+void AMonster::Tick(float DeltaSeconds)
+{
+	UpdateHeadMountHP(Stat.CurrentLifePoint, Stat.MaxLifePoint);
 }

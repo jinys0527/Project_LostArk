@@ -31,11 +31,9 @@ public:
 
 	virtual void PlayDead() override;
 
-	virtual void PlayHitReaction() override;
-
-	virtual void Move() override;
-
 	virtual void Attack() override;
+
+	virtual void PlayHitReaction() override;
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -54,5 +52,11 @@ public:
 
 	void Death();
 
+	uint8 bIsAttack : 1;
+
+	uint8 bIsHitted : 1;
+
 	EMonsterType MonsterType;
+
+	virtual void Tick(float DeltaSeconds) override;
 };

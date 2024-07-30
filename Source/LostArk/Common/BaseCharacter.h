@@ -57,9 +57,6 @@ public:
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<UAnimationAsset> IdleAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> AttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -68,17 +65,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> DeathMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TObjectPtr<UAnimMontage> MoveMontage;
-
 	UFUNCTION(BlueprintCallable)
 	virtual void PlayDead();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PlayHitReaction();
-
-	UFUNCTION(BlueprintCallable)
-	virtual void Move();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Attack();
