@@ -42,6 +42,15 @@ EBTNodeResult::Type UBTTask_AttackMelee::ExecuteTask(UBehaviorTreeComponent& Own
 		return EBTNodeResult::Failed;
 	}
 
+	if (Monster->MonsterType == EMonsterType::Common)
+	{
+		AttackRange = 88.0f;
+	}
+	else if (Monster->MonsterType == EMonsterType::Named)
+	{
+		AttackRange = 96.0f;
+	}
+
 	float DistanceToTarget = FVector::Dist(Monster->GetActorLocation(), TargetActor->GetActorLocation());
 	if (DistanceToTarget <= AttackRange)
 	{
@@ -61,10 +70,29 @@ void UBTTask_AttackMelee::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 
 void UBTTask_AttackMelee::PlayAttackAnimation(AMonster* Monster, AMyPlayer* Target)
 {
-	if (AttackMontage != nullptr)
+	if (Target->isAlive)
 	{
-		Monster->PlayAnimMontage(AttackMontage);
+		Monster->Attack();
 
-		UGameplayStatics::ApplyDamage(Target, Monster->CalcDamage(Monster->Stat.ATK, 100.f - Target->Stat.Block), Monster->GetController(), Monster, UDamageType::StaticClass());
+		FTimerHandle AttackTimer;
+
+		if (Monster->MonsterType == EMonsterType::Common)
+		{
+			GetWorld()->GetTimerManager().SetTimer(AttackTimer, [this, Monster, Target]() {
+				if (Monster->bIsAttack)
+				{
+					UGameplayStatics::ApplyDamage(Target, (Monster->CalcDamage(Monster->Stat.ATK, 100.f - Target->Stat.Block)), Target->GetController(), Monster, UDamageType::StaticClass());
+				}
+				}, 0.85f, false);
+		}
+		else if (Monster->MonsterType == EMonsterType::Named)
+		{
+			GetWorld()->GetTimerManager().SetTimer(AttackTimer, [this, Monster, Target]() {
+				if (Monster->bIsAttack)
+				{
+					UGameplayStatics::ApplyDamage(Target, (Monster->CalcDamage(Monster->Stat.ATK, 100.f - Target->Stat.Block)), Target->GetController(), Monster, UDamageType::StaticClass());
+				}
+				}, 0.22f, false);
+		}
 	}
 }

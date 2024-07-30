@@ -3,19 +3,20 @@
 
 #include "AnimInstance_Player.h"
 #include "../Player/MyPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
-void UAnimInstance_Player::UpdateAnimationProperties()
+void UAnimInstance_Player::NativeUpdateAnimation(float DeltaSeconds)
 {
-	if (Player)
-	{
-		bIsEquipped = Player->bIsEquipped;
-		bIsAttack = Player->bIsAttack;
-	}
-}
-
-void UAnimInstance_Player::NativeInitializeAnimation()
-{
-	Super::NativeInitializeAnimation();
+	Super::NativeUpdateAnimation(DeltaSeconds);
 
 	Player = Cast<AMyPlayer>(TryGetPawnOwner());
+	if (IsValid(Player))
+	{
+		Speed = Player->GetCharacterMovement()->Velocity.Size2D();
+		TimeCount = Player->TimeCount;
+		bIsAlive = Player->isAlive;
+		bIsAttack = Player->bIsAttack;
+		bIsEquipped = Player->bIsEquipped;
+		CurrentState = Player->CurrentState;
+	}
 }

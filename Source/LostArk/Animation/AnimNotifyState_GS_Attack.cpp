@@ -11,7 +11,6 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 	if(Player)
 	{ 
 		Player->bIsAttack = true;
-		Player->UpdateAnimationInstance();
 	}
 }
 
@@ -22,6 +21,5 @@ void UAnimNotifyState_GS_Attack::NotifyEnd(USkeletalMeshComponent* MeshComp, UAn
 	if (Player)
 	{
 		Player->bIsAttack = false;
-		Player->UpdateAnimationInstance();
 	}
 }

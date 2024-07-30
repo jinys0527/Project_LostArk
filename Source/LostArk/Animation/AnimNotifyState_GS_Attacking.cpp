@@ -3,6 +3,8 @@
 #include "AnimNotifyState_GS_Attacking.h"
 #include "../Player/MyPlayer.h"
 #include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../Weapon/GreatSword.h"
+#include "../Monster/Monster.h"
 
 
 void UAnimNotifyState_GS_Attacking::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
@@ -22,7 +24,18 @@ void UAnimNotifyState_GS_Attacking::NotifyEnd(USkeletalMeshComponent* MeshComp, 
 
 	if (Player)
 	{
+		if (Player->Target.Num() != 0)
+		{
+			for (AActor* Actor : Player->Target)
+			{
+				AMonster* Monster = Cast<AMonster>(Actor);
+				if (Monster)
+				{
+					Monster->bIsHitted = false;
+				}
+			}
+		}
 		Player->bIsAttacking = false;
-		Player->SetPlayerState(ECharacterState::Battle);
+		Player->EquippedGreatSword->bIsOverlapped = false;
 	}
 }

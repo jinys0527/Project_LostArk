@@ -61,10 +61,6 @@ void ABaseCharacter::PlayHitReaction()
 {
 }
 
-void ABaseCharacter::Move()
-{
-}
-
 void ABaseCharacter::Attack()
 {
 }
