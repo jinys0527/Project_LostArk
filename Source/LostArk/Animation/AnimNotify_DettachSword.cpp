@@ -16,5 +16,6 @@ void UAnimNotify_DettachSword::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 	{
 		Player->EquippedGreatSword->AttachToComponent(Player->GetMesh(), AttachmentRules, TEXT("Weapon_Socket"));
 		Player->bIsEquipped = false;
+		Player->SetPlayerState(ECharacterState::Idle);
 	}
 }

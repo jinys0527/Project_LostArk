@@ -67,7 +67,6 @@ void AMonster::PlayDead()
 {
 	int32 RandomNumber = FMath::RandRange(1, 2);
 	FString SectionName = FString::Printf(TEXT("Death_%d"), RandomNumber);
-	UE_LOG(LogTemp, Warning, TEXT("Death"));
 	PlayAnimMontage(DeathMontage, 1.0f, FName(*SectionName));
 }
 
@@ -190,6 +189,7 @@ void AMonster::Death()
 
 	if (MonsterType == EMonsterType::Boss)
 	{
+		PlayerHUD->BossHP->bIsAlive = false;
 		PlayerHUD->BossHP->SetVisibility(ESlateVisibility::Hidden);
 		--DungeonState->CurrentMonsterCount;
 	}

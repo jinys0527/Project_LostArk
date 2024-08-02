@@ -56,6 +56,8 @@ public:
 
 	uint8 bIsHitted : 1;
 
+	float DisttoTarget;
+
 	EMonsterType MonsterType;
 
 	virtual void Tick(float DeltaSeconds) override;

@@ -15,4 +15,6 @@ class LOSTARK_API ANamedMonster : public AMonster
 	GENERATED_BODY()
 public:
 	ANamedMonster();
+
+	virtual void PlayDead() override;
 };

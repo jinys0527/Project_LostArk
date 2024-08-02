@@ -45,6 +45,6 @@ void UBTService_CalcDistToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, ui
 	FVector MonsterLocation = Monster->GetActorLocation();
 
 	float DistToTarget = FVector::Dist(MonsterLocation, PlayerLocation);
-	
+	Monster->DisttoTarget = DistToTarget;
 	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(DisttoTarget.SelectedKeyName, DistToTarget);
 }

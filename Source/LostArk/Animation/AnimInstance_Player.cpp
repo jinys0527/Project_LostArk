@@ -13,10 +13,6 @@ void UAnimInstance_Player::NativeUpdateAnimation(float DeltaSeconds)
 	if (IsValid(Player))
 	{
 		Speed = Player->GetCharacterMovement()->Velocity.Size2D();
-		TimeCount = Player->TimeCount;
-		bIsAlive = Player->isAlive;
-		bIsAttack = Player->bIsAttack;
-		bIsEquipped = Player->bIsEquipped;
 		CurrentState = Player->CurrentState;
 	}
 }

@@ -27,3 +27,8 @@ ANamedMonster::ANamedMonster() : AMonster()
 
 	MonsterType = EMonsterType::Named;
 }
+
+void ANamedMonster::PlayDead()
+{
+	PlayAnimMontage(DeathMontage);
+}

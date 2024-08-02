@@ -18,6 +18,7 @@ enum class ECharacterState : uint8
 	Moving,
 	Battle,
 	Attacking,
+	Combat,	
 	Dashing,
 	Stunned,
 	Skilling,
@@ -45,10 +46,6 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	//때린다(UGameplayStatics::ApplyDamage), 맞는다(APawn::TakeDamage, PlayHitReaction), 죽는다(PlayDead), 이동한다(Move), 스킬은 플레이어?
-	//Stat
-	//애니메이션(Attack, HitReaction, Dead, Move)
 
 	FStat Stat;
 

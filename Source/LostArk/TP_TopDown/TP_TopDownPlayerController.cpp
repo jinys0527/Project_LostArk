@@ -112,98 +112,63 @@ void ATP_TopDownPlayerController::HandleHUDCommonMonster(APlayerHUD* PlayerHUD, 
 {
 	if (PlayerHUD->CommonHPClass)
 	{
-		if (PlayerHUD->BossHP && PlayerHUD->BossHP->GetVisibility() == ESlateVisibility::Hidden)
+		if (PlayerHUD->BossHP)
 		{
-			if (PlayerHUD->NamedHP)
-			{
-				PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
-			}
-			if (PlayerHUD->CommonHP && PlayerHUD->CommonHP->GetVisibility() == ESlateVisibility::Hidden)
-			{
-				PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
-			}
-			if (MonsterWidgetCount == 0)
-			{
-				PlayerHUD->CommonHP = CreateWidget<UMonsterCommonHPWidget>(this, PlayerHUD->CommonHPClass);
-				if (PlayerHUD->CommonHP)
-				{
-					PlayerHUD->CommonHP->AddToViewport();
-					PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
-					PlayerHUD->CommonHP->UpdateName(Monster->Name);
-				}
-			}
-			else
-			{
-				if (PlayerHUD->CommonHP)
-				{
-					if (PlayerHUD->CommonHP->GetCurrentHP() != Monster->Stat.CurrentLifePoint || PlayerHUD->CommonHP->GetMaxHP() != Monster->Stat.MaxLifePoint)
-					{
-						PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
-
-						if (PlayerHUD->CommonHP->GetCurrentHP() < 0.0f)
-						{
-							PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
-						}
-
-						else
-						{
-							PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
-						}
-					}
-					if (PlayerHUD->CommonHP->GetName() != Monster->Name)
-					{
-						PlayerHUD->CommonHP->UpdateName(Monster->Name);
-					}
-				}
-			}
-			++MonsterWidgetCount;
-		}
-		else if (PlayerHUD->BossHP)
-		{
-			if (PlayerHUD->BossHP)
+			if (PlayerHUD->BossHP->bIsCreated && PlayerHUD->BossHP->bIsAlive)
 			{
 				if (PlayerHUD->CommonHP)
 				{
 					PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
 				}
 			}
-			else if (PlayerHUD->CommonHP)
+			else if (!PlayerHUD->BossHP->bIsCreated || (PlayerHUD->BossHP->bIsCreated && !PlayerHUD->BossHP->bIsAlive))
 			{
-				if (MonsterWidgetCount == 0)
+				if (PlayerHUD->CommonHP)
 				{
-					PlayerHUD->CommonHP = CreateWidget<UMonsterCommonHPWidget>(this, PlayerHUD->CommonHPClass);
-					if (PlayerHUD->CommonHP)
+					if (PlayerHUD->NamedHP && PlayerHUD->NamedHP->GetVisibility() != ESlateVisibility::Hidden)
 					{
-						PlayerHUD->CommonHP->AddToViewport();
-						PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
-						PlayerHUD->CommonHP->UpdateName(Monster->Name);
+						PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
 					}
-				}
-				else
-				{
-					if (PlayerHUD->CommonHP)
+					if (PlayerHUD->CommonHP && PlayerHUD->CommonHP->GetVisibility() == ESlateVisibility::Hidden)
 					{
-						if (PlayerHUD->CommonHP->GetCurrentHP() != Monster->Stat.CurrentLifePoint || PlayerHUD->CommonHP->GetMaxHP() != Monster->Stat.MaxLifePoint)
+						PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
+					}
+					if (MonsterWidgetCount == 0)
+					{
+						PlayerHUD->CommonHP = CreateWidget<UMonsterCommonHPWidget>(this, PlayerHUD->CommonHPClass);
+						if (PlayerHUD->CommonHP)
 						{
+							PlayerHUD->CommonHP->AddToViewport();
 							PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
-
-							if (PlayerHUD->CommonHP->GetCurrentHP() < 0.0f)
-							{
-								PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
-							}
-
-							else
-							{
-								PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
-							}
-						}
-						if (PlayerHUD->CommonHP->GetName() != Monster->Name)
-						{
 							PlayerHUD->CommonHP->UpdateName(Monster->Name);
 						}
 					}
+					else
+					{
+						if (PlayerHUD->CommonHP)
+						{
+							if (PlayerHUD->CommonHP->GetCurrentHP() != Monster->Stat.CurrentLifePoint || PlayerHUD->CommonHP->GetMaxHP() != Monster->Stat.MaxLifePoint)
+							{
+								PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
+
+								if (PlayerHUD->CommonHP->GetCurrentHP() < 0.0f)
+								{
+									PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
+								}
+
+								else
+								{
+									PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
+								}
+							}
+							if (PlayerHUD->CommonHP->GetName() != Monster->Name)
+							{
+								PlayerHUD->CommonHP->UpdateName(Monster->Name);
+							}
+						}
+					}
+					++MonsterWidgetCount;
 				}
-				++MonsterWidgetCount;
 			}
 		}
 	}
@@ -213,96 +178,65 @@ void ATP_TopDownPlayerController::HandleHUDNamedMonster(APlayerHUD* PlayerHUD, A
 {
 	if (PlayerHUD && PlayerHUD->NamedHPClass)
 	{
-		if (PlayerHUD->BossHP && PlayerHUD->BossHP->GetVisibility() == ESlateVisibility::Hidden)
+		if (PlayerHUD->BossHP)
 		{
-			if (PlayerHUD->CommonHP)
-			{
-				PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
-			}
-			if (PlayerHUD->NamedHP && PlayerHUD->NamedHP->GetVisibility() == ESlateVisibility::Hidden)
-			{
-				PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
-			}
-			if (NamedWidgetCount == 0)
-			{
-				PlayerHUD->NamedHP = CreateWidget<UMonsterNamedHPWidget>(this, PlayerHUD->NamedHPClass);
-
-				if (PlayerHUD->NamedHP)
-				{
-					PlayerHUD->NamedHP->AddToViewport();
-					PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
-					PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
-				}
-			}
-			else
-			{
-				if (PlayerHUD->NamedHP->GetCurrentHP() != NamedMonster->Stat.CurrentLifePoint || PlayerHUD->NamedHP->GetMaxHP() != NamedMonster->Stat.MaxLifePoint)
-				{
-					PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
-
-					if (PlayerHUD->NamedHP->GetCurrentHP() < 0.0f)
-					{
-						PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
-					}
-
-					else
-					{
-						PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
-					}
-				}
-
-				if (PlayerHUD->NamedHP->GetName() != NamedMonster->Name)
-				{
-					PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
-				}
-			}
-			++NamedWidgetCount;
-		}
-		else if (PlayerHUD->BossHP)
-		{
-			if (PlayerHUD->BossHP)
+			if (PlayerHUD->BossHP->bIsCreated && PlayerHUD->BossHP->bIsAlive)
 			{
 				if (PlayerHUD->NamedHP)
 				{
 					PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
 				}
 			}
-			else if (PlayerHUD->NamedHP)
+			else if (!PlayerHUD->BossHP->bIsCreated || (PlayerHUD->BossHP->bIsCreated && !PlayerHUD->BossHP->bIsAlive))
 			{
-				if (NamedWidgetCount == 0)
+				if (PlayerHUD->NamedHP)
 				{
-					PlayerHUD->NamedHP = CreateWidget<UMonsterNamedHPWidget>(this, PlayerHUD->NamedHPClass);
-
-					if (PlayerHUD->NamedHP)
+					if (PlayerHUD->CommonHP && PlayerHUD->CommonHP->GetVisibility() != ESlateVisibility::Hidden)
 					{
-						PlayerHUD->NamedHP->AddToViewport();
-						PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
-						PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
+						PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
 					}
-				}
-				else
-				{
-					if (PlayerHUD->NamedHP->GetCurrentHP() != NamedMonster->Stat.CurrentLifePoint || PlayerHUD->NamedHP->GetMaxHP() != NamedMonster->Stat.MaxLifePoint)
+					if (PlayerHUD->NamedHP && PlayerHUD->NamedHP->GetVisibility() == ESlateVisibility::Hidden)
 					{
-						PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
+						PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
+					}
+					if (NamedWidgetCount == 0)
+					{
+						PlayerHUD->NamedHP = CreateWidget<UMonsterNamedHPWidget>(this, PlayerHUD->NamedHPClass);
 
-						if (PlayerHUD->NamedHP->GetCurrentHP() < 0.0f)
+						if (PlayerHUD->NamedHP)
 						{
-							PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
-						}
-
-						else
-						{
-							PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
+							PlayerHUD->NamedHP->AddToViewport();
+							PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
+							PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
 						}
 					}
-
-					if (PlayerHUD->NamedHP->GetName() != NamedMonster->Name)
+					else
 					{
-						PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
+						if (PlayerHUD->NamedHP)
+						{
+							if (PlayerHUD->NamedHP->GetCurrentHP() != NamedMonster->Stat.CurrentLifePoint || PlayerHUD->NamedHP->GetMaxHP() != NamedMonster->Stat.MaxLifePoint)
+							{
+								PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
+
+								if (PlayerHUD->NamedHP->GetCurrentHP() < 0.0f)
+								{
+									PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
+								}
+
+								else
+								{
+									PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
+								}
+							}
+
+							if (PlayerHUD->NamedHP->GetName() != NamedMonster->Name)
+							{
+								PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
+							}
+						}
 					}
+					++NamedWidgetCount;
 				}
-				++NamedWidgetCount;
 			}
 		}
 	}

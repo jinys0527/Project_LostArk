@@ -115,6 +115,15 @@ void AMyPlayer::BeginPlay()
 	{
 		PlayerAnimInstance = Cast<UAnimInstance_Player>(MeshComp->GetAnimInstance());
 	}
+
+	FTimerHandle UpdateStatusTimer;
+	FTimerHandle RegenTimer;
+
+	GetWorld()->GetTimerManager().SetTimer(RegenTimer, this, &AMyPlayer::Regen, 1.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(UpdateStatusTimer, [this, PlayerHUD]()
+		{
+			UpdateStatus(PlayerHUD);
+		}, 0.5f, true);
 }
 
 void AMyPlayer::Tick(float DeltaSeconds)
@@ -278,8 +287,21 @@ void AMyPlayer::EquipSword()
 	{
 		if (EquippedGreatSword)
 		{
+			PlayAnimMontage(EquipSwordMontage, 1.0f);
 			bIsEquipped = true;
 			GetWorld()->GetTimerManager().SetTimer(StepHandle, this, &AMyPlayer::OnTimer, 1.0f, true);
+		}
+	}
+}
+
+void AMyPlayer::UnEquipSword()
+{
+	//애니메이션 + Deattach
+	if (GreatSwordClass)
+	{
+		if (EquippedGreatSword)
+		{
+			PlayAnimMontage(UnEquipSwordMontage, 1.0f);
 		}
 	}
 }
@@ -306,9 +328,26 @@ void AMyPlayer::OnTimer()
 {
 	++TimeCount;
 
-	if (TimeCount >= 6)
+	if (TimeCount >= 5)
 	{
+		UnEquipSword();
 		GetWorld()->GetTimerManager().ClearTimer(StepHandle);
 		TimeCount = 0;
 	}
+}
+
+void AMyPlayer::Regen()
+{
+	if (CurrentState == ECharacterState::Idle ||
+		CurrentState == ECharacterState::Battle)
+	{
+		Stat.CurrentLifePoint += ceil(Stat.MaxLifePoint * 0.0006f);
+		Stat.CurrentMP += ceil(Stat.MaxMP * 0.0006f);
+	}
+}
+
+void AMyPlayer::UpdateStatus(APlayerHUD* PlayerHUD)
+{
+	PlayerHUD->PlayerStatus->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
+	PlayerHUD->PlayerStatus->UpdateMPBar(Stat.CurrentMP, Stat.MaxMP);
 }

@@ -59,6 +59,8 @@ void ABossMonster::BeginPlay()
 				PlayerHUD->BossHP = CreateWidget<UMonsterBossHPWidget>(PC, PlayerHUD->BossHPClass);
 				if (PlayerHUD->BossHP)
 				{
+					PlayerHUD->BossHP->bIsCreated = true;
+					PlayerHUD->BossHP->bIsAlive = true;
 					PlayerHUD->BossHP->AddToViewport();
 					PlayerHUD->BossHP->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
 					PlayerHUD->BossHP->UpdateName(Name);

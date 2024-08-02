@@ -79,7 +79,7 @@ void UBTTask_AttackMelee::PlayAttackAnimation(AMonster* Monster, AMyPlayer* Targ
 		if (Monster->MonsterType == EMonsterType::Common)
 		{
 			GetWorld()->GetTimerManager().SetTimer(AttackTimer, [this, Monster, Target]() {
-				if (Monster->bIsAttack)
+				if (Monster->bIsAttack && Monster->DisttoTarget <= AttackRange)
 				{
 					UGameplayStatics::ApplyDamage(Target, (Monster->CalcDamage(Monster->Stat.ATK, 100.f - Target->Stat.Block)), Target->GetController(), Monster, UDamageType::StaticClass());
 				}
@@ -88,7 +88,7 @@ void UBTTask_AttackMelee::PlayAttackAnimation(AMonster* Monster, AMyPlayer* Targ
 		else if (Monster->MonsterType == EMonsterType::Named)
 		{
 			GetWorld()->GetTimerManager().SetTimer(AttackTimer, [this, Monster, Target]() {
-				if (Monster->bIsAttack)
+				if (Monster->bIsAttack && Monster->DisttoTarget <= AttackRange)
 				{
 					UGameplayStatics::ApplyDamage(Target, (Monster->CalcDamage(Monster->Stat.ATK, 100.f - Target->Stat.Block)), Target->GetController(), Monster, UDamageType::StaticClass());
 				}

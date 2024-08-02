@@ -39,13 +39,15 @@ public:
 
 	virtual void Attack() override;
 
-	void PlayResurrection() ;
+	void PlayResurrection();
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	void Resurrection();
 
 	void EquipSword();
+
+	void UnEquipSword();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float WeaponATK;
@@ -91,6 +93,10 @@ public:
 	class UAnimInstance_Player* PlayerAnimInstance;
 
 	TArray<AActor*> Target;
+
+	void Regen();
+
+	void UpdateStatus(class APlayerHUD* PlayerHUD);
 
 private:
 	/** Top down camera */
