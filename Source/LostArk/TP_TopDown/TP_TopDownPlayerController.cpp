@@ -33,13 +33,13 @@ ATP_TopDownPlayerController::ATP_TopDownPlayerController()
 	PrimaryActorTick.bCanEverTick = true;
 	FollowTime = 0.f;
 
-	static ConstructorHelpers::FClassFinder<AMonster> MonsterBlueprint(TEXT("/Script/Engine.Blueprint'/Game/Monsters/Blueprints/BP_Common'"));
+	static ConstructorHelpers::FClassFinder<AMonster> MonsterBlueprint(TEXT("/Script/Engine.Blueprint'/Game/Blueprints/Monster/BP_Common'"));
 	if (MonsterBlueprint.Class)
 	{
 		MonsterClass = MonsterBlueprint.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<ANamedMonster> NamedBlueprint(TEXT("/ Script / Engine.Blueprint'/Game/Monsters/Blueprints/BP_Named'"));
+	static ConstructorHelpers::FClassFinder<ANamedMonster> NamedBlueprint(TEXT("/Script/Engine.Blueprint'/Game/Blueprints/Monster/BP_Named'"));
 	if (NamedBlueprint.Class)
 	{
 		NamedClass = NamedBlueprint.Class;

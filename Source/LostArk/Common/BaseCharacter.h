@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
 #include "Stat.h"
 #include "BaseCharacter.generated.h"
 
 class UAnimMontage;
 class UAnimationAsset;
 class UDamageWidget;
+class UAttributeSet;
+class UAbilitySystemComponent;
 
 UENUM(BlueprintType)
 enum class ECharacterState : uint8
@@ -28,7 +31,7 @@ enum class ECharacterState : uint8
 };
 
 UCLASS()
-class LOSTARK_API ABaseCharacter : public ACharacter
+class LOSTARK_API ABaseCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -82,4 +85,13 @@ public:
 	FVector WidgetLocation;
 	
 	uint8 isAlive : 1;
+
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY()
+	TObjectPtr<UAttributeSet> AttributeSet;
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 };

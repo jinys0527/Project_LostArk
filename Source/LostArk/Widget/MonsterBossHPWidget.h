@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "LostArkUserWidget.h"
 #include "MonsterBossHPWidget.generated.h"
 
 
@@ -14,7 +15,7 @@ class UImage;
  * 
  */
 UCLASS()
-class LOSTARK_API UMonsterBossHPWidget : public UUserWidget
+class LOSTARK_API UMonsterBossHPWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
 	

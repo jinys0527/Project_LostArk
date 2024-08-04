@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "LostArkUserWidget.h"
 #include "PlayerSlotWidget.generated.h"
 
 class UImage;
@@ -11,7 +12,7 @@ class UImage;
  * 
  */
 UCLASS()
-class LOSTARK_API UPlayerSlotWidget : public UUserWidget
+class LOSTARK_API UPlayerSlotWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
 

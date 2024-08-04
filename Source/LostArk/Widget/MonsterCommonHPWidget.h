@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "LostArkUserWidget.h"
 #include "MonsterCommonHPWidget.generated.h"
 
 class UProgressBar;
@@ -12,7 +13,7 @@ class UTextBlock;
  * 
  */
 UCLASS()
-class LOSTARK_API UMonsterCommonHPWidget : public UUserWidget
+class LOSTARK_API UMonsterCommonHPWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
 	

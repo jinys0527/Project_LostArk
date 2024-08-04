@@ -12,7 +12,7 @@
 AGreatSword::AGreatSword() : AWeapon()
 {
 	Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_Weapon(TEXT("/Script/Engine.StaticMesh'/Game/Weapons/Sword_EditPivot/SM_Sword_EditedPivot_.SM_Sword_EditedPivot_'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_Weapon(TEXT("/Script/Engine.StaticMesh'/Game/Meshes/Weapons/SM_Sword_EditedPivot_'"));
 
 	RootComponent = Weapon;
 	Weapon->SetGenerateOverlapEvents(true);

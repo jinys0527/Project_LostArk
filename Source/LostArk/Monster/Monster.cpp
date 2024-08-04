@@ -23,6 +23,8 @@
 #include "../ChaosDungeon/ChaosDungeonGameState.h"
 #include "../Widget/ProgressWidget.h"
 #include "../Animation/AnimInstance_Monster.h"
+#include "../AbilitySystem/LostArkAbilitySystemComponent.h"
+#include "../AbilitySystem/LostArkAttributeSet.h"
 
 AMonster::AMonster() : ABaseCharacter()
 {
@@ -61,6 +63,12 @@ AMonster::AMonster() : ABaseCharacter()
 	bIsAttack = false;
 
 	bIsHitted = false;
+
+	AbilitySystemComponent = CreateDefaultSubobject<ULostArkAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
+	AttributeSet = CreateDefaultSubobject<ULostArkAttributeSet>(TEXT("AttributeSet"));
 }
 
 void AMonster::PlayDead()

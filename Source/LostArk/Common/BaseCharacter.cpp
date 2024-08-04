@@ -71,3 +71,8 @@ float ABaseCharacter::CalcDamage(float ATK, float Block)
 
 	return FinalDamage;
 }
+
+UAbilitySystemComponent* ABaseCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}

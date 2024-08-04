@@ -61,7 +61,7 @@ AMyPlayer::AMyPlayer() : ABaseCharacter()
 
 	SetPlayerState(ECharacterState::Idle);
 
-	static ConstructorHelpers::FClassFinder<AGreatSword> GreatSword(TEXT("/Script/Engine.Blueprint'/Game/Weapons/Blueprints/BP_GreatSword.BP_GreatSword_C'"));
+	static ConstructorHelpers::FClassFinder<AGreatSword> GreatSword(TEXT("/Script/Engine.Blueprint'/Game/Blueprints/Weapons/BP_GreatSword'"));
 
 	if (GreatSword.Succeeded() && GreatSword.Class != NULL)
 	{
@@ -149,7 +149,7 @@ void AMyPlayer::PlayHitReaction()
 	{
 		PlayAnimMontage(HitReactionMontage, 1.0f);
 	}
-	else if (CurrentState == ECharacterState::Battle)
+	else if (CurrentState == ECharacterState::Battle || CurrentState == ECharacterState::Attacking || CurrentState == ECharacterState::Combat)
 	{
 		PlayAnimMontage(HitReactionBattleMontage, 1.0f);
 	}

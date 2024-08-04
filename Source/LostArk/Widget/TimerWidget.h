@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "LostArkUserWidget.h"
 #include "TimerWidget.generated.h"
 
 class UImage;
@@ -12,7 +13,7 @@ class UTextBlock;
  * 
  */
 UCLASS()
-class LOSTARK_API UTimerWidget : public UUserWidget
+class LOSTARK_API UTimerWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
 	

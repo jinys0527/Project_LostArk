@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "LostArkUserWidget.h"
 #include "DamageWidget.generated.h"
 
 class UTextBlock;
@@ -11,7 +12,7 @@ class UTextBlock;
  * 
  */
 UCLASS()
-class LOSTARK_API UDamageWidget : public UUserWidget
+class LOSTARK_API UDamageWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
 public:
