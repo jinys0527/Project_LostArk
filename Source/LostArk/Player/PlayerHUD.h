@@ -15,6 +15,15 @@ class UPlayerSlotWidget;
 class UPlayerStatusWidget;
 class UProgressWidget;
 class UTimerWidget;
+class ULostArkUserWidget;
+class UOverlayWidgetController;
+class UAbilitySystemComponent;
+class UAttributeSet;
+class UOverlayWidget;
+class UEXPExpeditionWidget;
+class UMinimapTrixionWidget;
+class UMinimapLogHillWidget;
+struct FWidgetControllerParams;
 /**
  * 
  */
@@ -26,16 +35,20 @@ class LOSTARK_API APlayerHUD : public AHUD
 public:
 	APlayerHUD();
 
-	virtual void BeginPlay() override;
+	UPROPERTY()
+	TObjectPtr<UOverlayWidget> OverlayWidget;
 
-	UPROPERTY(EditAnywhere, Category = "Widget")
-	TSubclassOf<UUserWidget> HeadMountClass;
+	UOverlayWidgetController* GetOverlayWidgetController(const FWidgetControllerParams& WCParams);
+
+	void InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
+
+	virtual void DrawHUD() override;
 
 	UPROPERTY()
 	UHeadMountHPWidget* HeadMountHP;
 
 	UPROPERTY(EditAnywhere, Category = "Widget")
-	TSubclassOf<UUserWidget> BossHPClass;
+	TSubclassOf<ULostArkUserWidget> BossHPClass;
 
 	UPROPERTY()
 	UMonsterBossHPWidget* BossHP;
@@ -76,5 +89,34 @@ public:
 	UPROPERTY()
 	UTimerWidget* Timer;
 
-	virtual void DrawHUD() override;
+	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> ExpExpeditionClass;
+
+	UPROPERTY()
+	UEXPExpeditionWidget* WBPExpExpedition;
+
+	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> MinimapTrixionClass;
+
+	UPROPERTY()
+	UMinimapTrixionWidget* WBPMiniMapTrixion;
+
+	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> MinimapLogHillClass;
+
+	UPROPERTY()
+	UMinimapLogHillWidget* WBPMiniMapLogHill;
+
+protected:
+	virtual void BeginPlay() override;
+
+private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ULostArkUserWidget> OverlayWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UOverlayWidgetController> OverlayWidgetController;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UOverlayWidgetController> OverlayWidgetControllerClass;
 };

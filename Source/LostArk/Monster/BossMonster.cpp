@@ -8,29 +8,35 @@
 #include "../Widget/MonsterNamedHPWidget.h"
 #include "../Widget/MonsterCommonHPWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "../Widget/OverlayWidget.h"
 #include "Components/WidgetComponent.h"
+#include "../Animation/AnimInstance_Monster.h"
 
 int32 ABossMonster::BossWidgetCount = 0;
 
 ABossMonster::ABossMonster() : AMonster()
 {
-	//HP, 생명력
-	Stat.MaxLifePoint = Super::Stat.MaxLifePoint * 2.25f;
-	Stat.CurrentLifePoint = Stat.MaxLifePoint;
-
-	//공격력
-	Stat.ATK = Super::Stat.ATK * 2.25f;
-
-	//방어력
-	Stat.DEF = Super::Stat.DEF * 2.25f;
-	Stat.Block = (Stat.DEF / (Stat.DEF + 6500.f)) * 100.f;
-
-	//경험치
-	Stat.EXP = 0.0f;
+	AnimInstance = Cast<UAnimInstance_Monster>(GetMesh()->GetAnimInstance());
 
 	Name = "Boss Monster";
 
 	MonsterType = EMonsterType::Boss;
+}
+
+void ABossMonster::PlayFire()
+{
+	PlayAnimMontage(FireMontage, 1.0f);
+}
+
+void ABossMonster::PlayHitReaction()
+{
+	if (AnimInstance)
+	{
+		if (!AnimInstance->Montage_IsPlaying(AttackMontage) && !AnimInstance->Montage_IsPlaying(FireMontage))
+		{
+			PlayAnimMontage(HitReactionMontage, 1.0f);
+		}
+	}
 }
 
 void ABossMonster::BeginPlay()
@@ -42,31 +48,25 @@ void ABossMonster::BeginPlay()
 
 	if (PlayerHUD)
 	{
-		if (PlayerHUD->BossHPClass)
+		if (PlayerHUD->CommonHP)
 		{
-			if (PlayerHUD->BossHP)
-			{
-				if (PlayerHUD->CommonHP)
-				{
-					PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
-				}
+			PlayerHUD->OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Collapsed);
+		}
 
-				if (PlayerHUD->NamedHP)
-				{
-					PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
-				}
+		if (PlayerHUD->NamedHP)
+		{
+			PlayerHUD->OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Collapsed);
+		}
 
-				PlayerHUD->BossHP = CreateWidget<UMonsterBossHPWidget>(PC, PlayerHUD->BossHPClass);
-				if (PlayerHUD->BossHP)
-				{
-					PlayerHUD->BossHP->bIsCreated = true;
-					PlayerHUD->BossHP->bIsAlive = true;
-					PlayerHUD->BossHP->AddToViewport();
-					PlayerHUD->BossHP->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
-					PlayerHUD->BossHP->UpdateName(Name);
-				}
-			}
+		if (PlayerHUD->BossHP)
+		{
+			PlayerHUD->OverlayWidget->WBPHPBoss->SetVisibility(ESlateVisibility::Visible);
 		}
 
 	}
+}
+
+void ABossMonster::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
 }

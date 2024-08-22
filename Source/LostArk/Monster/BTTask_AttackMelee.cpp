@@ -7,6 +7,9 @@
 #include "../Monster/Monster.h"
 #include "../Player/MyPlayer.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameplayAbilitySpecHandle.h"
+#include "AbilitySystemComponent.h"
+#include "../AbilitySystem/GameplayAbility/GA_Attack.h"
 
 UBTTask_AttackMelee::UBTTask_AttackMelee()
 {
@@ -42,13 +45,19 @@ EBTNodeResult::Type UBTTask_AttackMelee::ExecuteTask(UBehaviorTreeComponent& Own
 		return EBTNodeResult::Failed;
 	}
 
+	Monster->Target = TargetActor;
+
 	if (Monster->MonsterType == EMonsterType::Common)
 	{
-		AttackRange = 88.0f;
+		AttackRange = 95.0f;
 	}
 	else if (Monster->MonsterType == EMonsterType::Named)
 	{
-		AttackRange = 96.0f;
+		AttackRange = 100.0f;
+	}
+	else if (Monster->MonsterType == EMonsterType::Boss)
+	{
+		AttackRange = 115.0f;
 	}
 
 	float DistanceToTarget = FVector::Dist(Monster->GetActorLocation(), TargetActor->GetActorLocation());
@@ -72,27 +81,13 @@ void UBTTask_AttackMelee::PlayAttackAnimation(AMonster* Monster, AMyPlayer* Targ
 {
 	if (Target->isAlive)
 	{
-		Monster->Attack();
-
-		FTimerHandle AttackTimer;
-
-		if (Monster->MonsterType == EMonsterType::Common)
+		if (Monster->DisttoTarget <= AttackRange)
 		{
-			GetWorld()->GetTimerManager().SetTimer(AttackTimer, [this, Monster, Target]() {
-				if (Monster->bIsAttack && Monster->DisttoTarget <= AttackRange)
-				{
-					UGameplayStatics::ApplyDamage(Target, (Monster->CalcDamage(Monster->Stat.ATK, 100.f - Target->Stat.Block)), Target->GetController(), Monster, UDamageType::StaticClass());
-				}
-				}, 0.85f, false);
-		}
-		else if (Monster->MonsterType == EMonsterType::Named)
-		{
-			GetWorld()->GetTimerManager().SetTimer(AttackTimer, [this, Monster, Target]() {
-				if (Monster->bIsAttack && Monster->DisttoTarget <= AttackRange)
-				{
-					UGameplayStatics::ApplyDamage(Target, (Monster->CalcDamage(Monster->Stat.ATK, 100.f - Target->Stat.Block)), Target->GetController(), Monster, UDamageType::StaticClass());
-				}
-				}, 0.22f, false);
+			UAbilitySystemComponent* AbilitySystemComponent = Monster->GetAbilitySystemComponent();
+			if (AbilitySystemComponent)
+			{
+				AbilitySystemComponent->TryActivateAbilityByClass(UGA_Attack::StaticClass());
+			}
 		}
 	}
 }

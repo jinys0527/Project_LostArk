@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../Common/BaseCharacter.h"
+#include "../Widget/OverlayWidgetController.h"
 #include "MonsterType.h"
 #include "Monster.generated.h"
 
@@ -13,6 +14,9 @@ class UWidgetComponent;
 class UDamageWidget;
 class ABossMonster;
 class ANamedMonster;
+class UAbilitySystemComponent;
+class UAttributeSet;
+class UAnimInstance_Monster;
 
 /**
  * 
@@ -24,8 +28,6 @@ class LOSTARK_API AMonster : public ABaseCharacter
 public:
 	AMonster();
 
-	FStat Stat;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
 	APlayerHUD* MonsterHPBar;
 
@@ -35,22 +37,23 @@ public:
 
 	virtual void PlayHitReaction() override;
 
-	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	virtual void PossessedBy(AController* NewController);
 
-	virtual void BeginPlay() override;
+	UFUNCTION()
+	virtual void OnOutOfHealth();
+
+	UFUNCTION()
+	virtual void OnGetDamage(AActor* DamageCauser, float Damage);
+
+	virtual void SetDead();
+
+	float DeadEventDelayTime = 3.0f;
+
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
 	UWidgetComponent* HeadMountHPBarWidget;
-
-	void UpdateHeadMountHP(float CurrentHP, float MaxHP);
-
-	TSubclassOf<AMonster> CommonClass;
-
-	TSubclassOf<ANamedMonster> NamedClass;
-
-	TSubclassOf<ABossMonster> BossClass;
-
-	void Death();
 
 	uint8 bIsAttack : 1;
 
@@ -58,7 +61,27 @@ public:
 
 	float DisttoTarget;
 
+	AActor* Target;
+
 	EMonsterType MonsterType;
 
-	virtual void Tick(float DeltaSeconds) override;
+	virtual void InitAbilityActorInfo() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayEffect")
+	TSubclassOf<class UGameplayEffect> EffectClass;
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnAttributeChangedSignature OnMonsterCurrentLifePointChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnAttributeChangedSignature OnMonsterMaxLifePointChanged;
+
+	UAnimInstance_Monster* AnimInstance;
+
+protected:
+	virtual void BeginPlay() override;
+
+	
+private:
+	
 };

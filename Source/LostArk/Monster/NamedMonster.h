@@ -16,5 +16,9 @@ class LOSTARK_API ANamedMonster : public AMonster
 public:
 	ANamedMonster();
 
+	virtual void BeginPlay() override;
+
+	virtual void PossessBy(AController* NewController);
+
 	virtual void PlayDead() override;
 };

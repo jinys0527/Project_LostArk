@@ -9,7 +9,7 @@ void UPlayerStatusWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (HPBar)
+	/*if (HPBar)
 	{
 		HPBar->SetPercent(1.0f);
 	}
@@ -32,14 +32,14 @@ void UPlayerStatusWidget::NativeConstruct()
 	if (MaxMP)
 	{
 		MaxMP->SetText(FText::FromString("0"));
-	}
+	}*/
 }
 
 void UPlayerStatusWidget::UpdateHPBar(float PlayerCurrentHP, float PlayerMaxHP)
 {
 	float Ratio = PlayerCurrentHP / PlayerMaxHP;
 	SetCurrentHP(FMath::Clamp(PlayerCurrentHP, 0.f, PlayerMaxHP));
-	SetMaxHP(PlayerMaxHP);
+	//SetMaxHP(PlayerMaxHP);
 	HPBar->SetPercent(Ratio);
 }
 
@@ -53,7 +53,7 @@ void UPlayerStatusWidget::UpdateMPBar(float PlayerCurrentMP, float PlayerMaxMP)
 
 void UPlayerStatusWidget::SetCurrentHP(float PlayerCurrentHP)
 {
-	CurrentHP->SetText(FText::FromString(FString::FromInt(round(PlayerCurrentHP))));
+	//CurrentHP->SetText(FText::FromString(FString::FromInt(round(PlayerCurrentHP))));
 }
 
 void UPlayerStatusWidget::SetMaxHP(float PlayerMaxHP)

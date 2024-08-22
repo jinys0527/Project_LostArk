@@ -5,6 +5,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
 #include "Kismet/GameplayStatics.h"
+#include "../Player/MyPlayer.h"
 
 UBTService_FindNearestTarget::UBTService_FindNearestTarget()
 {
@@ -36,11 +37,15 @@ void UBTService_FindNearestTarget::FindNearestTarget(UBehaviorTreeComponent& Own
 
 		for (AActor* Actor : TaggedActors)
 		{
-			float DistanceSq = FVector::Dist(AILocation, Actor->GetActorLocation());
-			if (DistanceSq < NearestDistance)
+			AMyPlayer* Player = Cast<AMyPlayer>(Actor);
+			if (Player && Player->isAlive)
 			{
-				NearestDistance = DistanceSq;
-				NearestTarget = Actor;
+				float DistanceSq = FVector::Dist(AILocation, Actor->GetActorLocation());
+				if (DistanceSq < NearestDistance)
+				{
+					NearestDistance = DistanceSq;
+					NearestTarget = Actor;
+				}
 			}
 		}
 
@@ -48,6 +53,11 @@ void UBTService_FindNearestTarget::FindNearestTarget(UBehaviorTreeComponent& Own
 		{
 			BlackboardComp->SetValueAsObject(TargetToFollow.SelectedKeyName, NearestTarget);
 			BlackboardComp->SetValueAsFloat(DisttoTarget.SelectedKeyName, NearestDistance);
+		}
+		else
+		{
+			BlackboardComp->ClearValue(TargetToFollow.SelectedKeyName);
+			BlackboardComp->ClearValue(DisttoTarget.SelectedKeyName);
 		}
 	}
 }

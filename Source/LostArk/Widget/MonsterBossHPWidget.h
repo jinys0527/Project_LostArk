@@ -20,7 +20,6 @@ class LOSTARK_API UMonsterBossHPWidget : public ULostArkUserWidget
 	GENERATED_BODY()
 	
 public:
-	virtual void NativeConstruct() override;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UProgressBar* HPBar;
@@ -41,11 +40,6 @@ public:
 
 	uint8 bIsAlive : 1;
 
-	void UpdateHPBar(float BossCurrentHP, float BossMaxHP);
+	virtual void NativeConstruct() override;
 
-	void UpdateName(FString NewName);
-
-	void SetCurrentHP(float BossCurrentHP);
-
-	void SetMaxHP(float BossMaxHP);
 };

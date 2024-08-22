@@ -19,13 +19,24 @@ class LOSTARK_API ALostArkPlayerState : public APlayerState, public IAbilitySyst
 	GENERATED_BODY()
 public:
 	ALostArkPlayerState();
-
-	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
-
-	UPROPERTY()
-	TObjectPtr<UAttributeSet> AttributeSet;
-
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
+
+	FORCEINLINE float GetPlayerLevel() const { return Level; }
+
+	FORCEINLINE void LevelUP() { ++Level; }
+protected:
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UAttributeSet> AttributeSet;
+
+private:
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Level)
+	float Level = 1.0f;
+
+	UFUNCTION()
+	void OnRep_Level(float OldLevel);
 };

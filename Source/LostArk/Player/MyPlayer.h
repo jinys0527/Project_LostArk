@@ -7,6 +7,7 @@
 #include "../Common/BaseCharacter.h"
 #include "MyPlayer.generated.h"
 
+
 UCLASS(Blueprintable)
 class AMyPlayer : public ABaseCharacter
 {
@@ -25,15 +26,13 @@ public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
-	FStat Stat;
-
 	ECharacterState CurrentState;
 
 	ECharacterState PrevState;
 
 	void SetPlayerState(ECharacterState NewState);
 
-	virtual void PlayDead();
+	virtual void PlayDead() override;
 
 	virtual void PlayHitReaction() override;
 
@@ -41,7 +40,13 @@ public:
 
 	void PlayResurrection();
 
-	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	virtual void SetDead() override;
+
+	UFUNCTION()
+	virtual void OnOutOfHealth();
+
+	UFUNCTION()
+	virtual void OnGetDamage(AActor* DamageCauser, float Damage);
 
 	void Resurrection();
 
@@ -57,6 +62,7 @@ public:
 
 	void AttachSword();
 
+	UPROPERTY(EditAnywhere)
 	class AGreatSword* EquippedGreatSword;
 
 	uint8 bIsEquipped : 1;
@@ -89,14 +95,31 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactionBattleMontage;
 
+	FORCEINLINE virtual class UAnimMontage* GetEquipMontage() const { return EquipSwordMontage; }
+
 	UPROPERTY(Transient)
 	class UAnimInstance_Player* PlayerAnimInstance;
 
-	TArray<AActor*> Target;
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 
-	void Regen();
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TMap<int32, TSubclassOf<class UGameplayAbility>> StartInputAbilities;
 
-	void UpdateStatus(class APlayerHUD* PlayerHUD);
+	TSet<AActor*> Target;
+
+	virtual void PossessedBy(AController* NewController) override;
+
+	virtual void OnRep_PlayerState() override;
+
+	class UAnimInstance_Player* AnimInstance;
+
+	float GetPlayerLevel();
+
+	void LevelUP();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	TSubclassOf<UGameplayEffect> GameplayEffectClass;
 
 private:
 	/** Top down camera */
@@ -106,4 +129,6 @@ private:
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
+
+	virtual void InitAbilityActorInfo() override;
 };

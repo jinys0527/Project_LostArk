@@ -19,10 +19,10 @@ void AMonsterAIController::BeginPlay()
 		GetBlackboardComponent()->SetValueAsVector(TEXT("StartLocation"), GetPawn()->GetActorLocation());
 
 		GetBlackboardComponent()->SetValueAsVector(TEXT("PlayerLocation"), Player->GetActorLocation());
+
+		GetBlackboardComponent()->SetValueAsBool(TEXT("AbilityEnd"), true);
 	}
 	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-
-	//SetFocus(Player);
 }
 
 void AMonsterAIController::Tick(float DeltaSeconds)
@@ -32,4 +32,22 @@ void AMonsterAIController::Tick(float DeltaSeconds)
 	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 
 	//MoveToActor(Player, AcceptanceRadius);
+}
+
+void AMonsterAIController::NotifyAbilityStart()
+{
+	UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
+	if (BlackboardComponent)
+	{
+		BlackboardComponent->SetValueAsBool(TEXT("AbilityEnd"), false);
+	}
+}
+
+void AMonsterAIController::NotifyAbilityEnd()
+{
+	UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
+	if (BlackboardComponent)
+	{
+		BlackboardComponent->SetValueAsBool(TEXT("AbilityEnd"), true);
+	}
 }

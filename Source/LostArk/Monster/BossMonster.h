@@ -6,6 +6,7 @@
 #include "Monster.h"
 #include "BossMonster.generated.h"
 
+
 /**
  * 
  */
@@ -20,5 +21,18 @@ public:
 
 	static int32 BossWidgetCount;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<UAnimMontage> FireMontage;
+
+	void PlayFire();
+
+	FORCEINLINE virtual class UAnimMontage* GetFireMontage() const { return FireMontage; }
+
+	class UNiagaraComponent* Niagara;
+
+	virtual void PlayHitReaction() override;
+
 	virtual void BeginPlay() override;
+
+	virtual void PossessedBy(AController* NewController) override;
 };

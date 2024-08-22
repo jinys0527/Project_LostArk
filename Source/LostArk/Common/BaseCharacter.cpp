@@ -4,16 +4,16 @@
 #include "BaseCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "AbilitySystemComponent.h"
+#include "../AbilitySystem/LostArkPlayerAttributeSet.h"
 #include "../Widget/DamageWidget.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-	Stat.Dodge = 0.0f;
-	Stat.HitRate = 1.0f;
 
 	static ConstructorHelpers::FClassFinder<UDamageWidget> DamageBlueprint(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/UI/Widget/WB_Damage'"));
 	if (DamageBlueprint.Class)
@@ -45,12 +45,6 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-float ABaseCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
-{
-	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-
-	return 0.0f;
-}
 
 void ABaseCharacter::PlayDead()
 {
@@ -72,7 +66,38 @@ float ABaseCharacter::CalcDamage(float ATK, float Block)
 	return FinalDamage;
 }
 
+void ABaseCharacter::SetDead()
+{
+	isAlive = false;
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	PlayDead();
+	SetActorEnableCollision(false);
+}
+
 UAbilitySystemComponent* ABaseCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void ABaseCharacter::InitAbilityActorInfo()
+{
+}
+
+void ABaseCharacter::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float CurrentLevel) const
+{
+	check(IsValid(GetAbilitySystemComponent()));
+	check(GameplayEffectClass);
+	FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass, CurrentLevel, ContextHandle);
+	
+	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
+	UE_LOG(LogTemp, Log, TEXT("GameplayEffect Applied Successfully"));
+}
+
+void ABaseCharacter::InitializeDefaultAttributes() const
+{
+	ApplyEffectToSelf(DefaultPrimaryAttributes, Level);
+	ApplyEffectToSelf(DefaultSecondaryAttributes, Level);
+	ApplyEffectToSelf(DefaultVitalAttributes, Level);
 }

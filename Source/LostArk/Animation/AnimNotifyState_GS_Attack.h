@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
+#include "GameplayEffectTypes.h" 
 #include "AnimNotifyState_GS_Attack.generated.h"
 
 /**
@@ -14,7 +15,8 @@ class LOSTARK_API UAnimNotifyState_GS_Attack : public UAnimNotifyState
 {
 	GENERATED_BODY()
 public:
-	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayEffect")
+	TSubclassOf<class UGameplayEffect> EffectClass;
 
-	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
 };

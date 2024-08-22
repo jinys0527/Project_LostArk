@@ -32,20 +32,4 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* MaxHP;
 
-	void UpdateHPBar(float NamedCurrentHP, float NamedMaxHP);
-
-	void UpdateName(FString NewName);
-
-	UFUNCTION()
-	FString GetName();
-
-	UFUNCTION()
-	float GetCurrentHP();
-
-	UFUNCTION()
-	float GetMaxHP();
-
-	void SetCurrentHP(float NamedCurrentHP);
-
-	void SetMaxHP(float NamedMaxHP);
 };

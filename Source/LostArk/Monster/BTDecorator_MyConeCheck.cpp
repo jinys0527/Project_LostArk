@@ -46,7 +46,7 @@ bool UBTDecorator_MyConeCheck::CalculateRawConditionValue(UBehaviorTreeComponent
 
 	if(Valid)
 	{
-		return FMath::Acos(Product) <= Angle;
+		return FMath::Acos(Product) * 180.0f / PI <= Angle;
 	}
 
 	return false;

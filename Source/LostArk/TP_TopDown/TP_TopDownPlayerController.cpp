@@ -13,6 +13,9 @@
 #include "../Widget/MonsterNamedHPWidget.h"
 #include "../Widget/MonsterCommonHPWidget.h"
 #include "../Widget/MonsterBossHPWidget.h"
+#include "../Widget/OverlayWidget.h"
+#include "../Player/LostArkPlayerState.h"
+#include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
@@ -32,18 +35,6 @@ ATP_TopDownPlayerController::ATP_TopDownPlayerController()
 	CachedDestination = FVector::ZeroVector;
 	PrimaryActorTick.bCanEverTick = true;
 	FollowTime = 0.f;
-
-	static ConstructorHelpers::FClassFinder<AMonster> MonsterBlueprint(TEXT("/Script/Engine.Blueprint'/Game/Blueprints/Monster/BP_Common'"));
-	if (MonsterBlueprint.Class)
-	{
-		MonsterClass = MonsterBlueprint.Class;
-	}
-
-	static ConstructorHelpers::FClassFinder<ANamedMonster> NamedBlueprint(TEXT("/Script/Engine.Blueprint'/Game/Blueprints/Monster/BP_Named'"));
-	if (NamedBlueprint.Class)
-	{
-		NamedClass = NamedBlueprint.Class;
-	}
 }
 
 
@@ -52,6 +43,11 @@ void ATP_TopDownPlayerController::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		Subsystem->AddMappingContext(DefaultMappingContext, 0);
+	}
 
 	GetWorldTimerManager().SetTimer(LineTraceTimerHandle, this, &ATP_TopDownPlayerController::CheckMouseOver, 0.1f, true);
 }
@@ -110,64 +106,29 @@ void ATP_TopDownPlayerController::CheckMouseOver()
 
 void ATP_TopDownPlayerController::HandleHUDCommonMonster(APlayerHUD* PlayerHUD, AMonster* Monster)
 {
-	if (PlayerHUD->CommonHPClass)
+	if (PlayerHUD->OverlayWidget->CommonHPClass)
 	{
-		if (PlayerHUD->BossHP)
+		if (PlayerHUD->OverlayWidget->WBPHPBoss)
 		{
-			if (PlayerHUD->BossHP->bIsCreated && PlayerHUD->BossHP->bIsAlive)
+			if (PlayerHUD->OverlayWidget->WBPHPBoss->GetVisibility() == ESlateVisibility::Visible)
 			{
-				if (PlayerHUD->CommonHP)
+				if (PlayerHUD->OverlayWidget->WBPHPCommon)
 				{
-					PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
+					PlayerHUD->OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Collapsed);
 				}
 			}
-			else if (!PlayerHUD->BossHP->bIsCreated || (PlayerHUD->BossHP->bIsCreated && !PlayerHUD->BossHP->bIsAlive))
+			else if (!PlayerHUD->OverlayWidget->WBPHPBoss->bIsCreated || (PlayerHUD->OverlayWidget->WBPHPBoss->bIsCreated && !PlayerHUD->OverlayWidget->WBPHPBoss->bIsAlive))
 			{
-				if (PlayerHUD->CommonHP)
+				if (PlayerHUD->OverlayWidget->WBPHPCommon)
 				{
-					if (PlayerHUD->NamedHP && PlayerHUD->NamedHP->GetVisibility() != ESlateVisibility::Hidden)
+					if (PlayerHUD->OverlayWidget->WBPHPNamed && PlayerHUD->OverlayWidget->WBPHPNamed->GetVisibility() != ESlateVisibility::Collapsed)
 					{
-						PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
+						PlayerHUD->OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Collapsed);
 					}
-					if (PlayerHUD->CommonHP && PlayerHUD->CommonHP->GetVisibility() == ESlateVisibility::Hidden)
+					if (PlayerHUD->OverlayWidget->WBPHPCommon && PlayerHUD->OverlayWidget->WBPHPCommon->GetVisibility() == ESlateVisibility::Collapsed)
 					{
-						PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
+						PlayerHUD->OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Visible);
 					}
-					if (MonsterWidgetCount == 0)
-					{
-						PlayerHUD->CommonHP = CreateWidget<UMonsterCommonHPWidget>(this, PlayerHUD->CommonHPClass);
-						if (PlayerHUD->CommonHP)
-						{
-							PlayerHUD->CommonHP->AddToViewport();
-							PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
-							PlayerHUD->CommonHP->UpdateName(Monster->Name);
-						}
-					}
-					else
-					{
-						if (PlayerHUD->CommonHP)
-						{
-							if (PlayerHUD->CommonHP->GetCurrentHP() != Monster->Stat.CurrentLifePoint || PlayerHUD->CommonHP->GetMaxHP() != Monster->Stat.MaxLifePoint)
-							{
-								PlayerHUD->CommonHP->UpdateHPBar(Monster->Stat.CurrentLifePoint, Monster->Stat.MaxLifePoint);
-
-								if (PlayerHUD->CommonHP->GetCurrentHP() < 0.0f)
-								{
-									PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
-								}
-
-								else
-								{
-									PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Visible);
-								}
-							}
-							if (PlayerHUD->CommonHP->GetName() != Monster->Name)
-							{
-								PlayerHUD->CommonHP->UpdateName(Monster->Name);
-							}
-						}
-					}
-					++MonsterWidgetCount;
 				}
 			}
 		}
@@ -176,66 +137,29 @@ void ATP_TopDownPlayerController::HandleHUDCommonMonster(APlayerHUD* PlayerHUD, 
 
 void ATP_TopDownPlayerController::HandleHUDNamedMonster(APlayerHUD* PlayerHUD, ANamedMonster* NamedMonster)
 {
-	if (PlayerHUD && PlayerHUD->NamedHPClass)
+	if (PlayerHUD && PlayerHUD->OverlayWidget->NamedHPClass)
 	{
-		if (PlayerHUD->BossHP)
+		if (PlayerHUD->OverlayWidget->WBPHPBoss)
 		{
-			if (PlayerHUD->BossHP->bIsCreated && PlayerHUD->BossHP->bIsAlive)
+			if (PlayerHUD->OverlayWidget->WBPHPBoss->GetVisibility() == ESlateVisibility::Visible)
 			{
-				if (PlayerHUD->NamedHP)
+				if (PlayerHUD->OverlayWidget->WBPHPNamed)
 				{
-					PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
+					PlayerHUD->OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Collapsed);
 				}
 			}
-			else if (!PlayerHUD->BossHP->bIsCreated || (PlayerHUD->BossHP->bIsCreated && !PlayerHUD->BossHP->bIsAlive))
+			else if (!PlayerHUD->OverlayWidget->WBPHPBoss->bIsCreated || (PlayerHUD->OverlayWidget->WBPHPBoss->bIsCreated && !PlayerHUD->OverlayWidget->WBPHPBoss->bIsAlive))
 			{
-				if (PlayerHUD->NamedHP)
+				if (PlayerHUD->OverlayWidget->WBPHPNamed)
 				{
-					if (PlayerHUD->CommonHP && PlayerHUD->CommonHP->GetVisibility() != ESlateVisibility::Hidden)
+					if (PlayerHUD->OverlayWidget->WBPHPCommon && PlayerHUD->OverlayWidget->WBPHPCommon->GetVisibility() != ESlateVisibility::Collapsed)
 					{
-						PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
+						PlayerHUD->OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Collapsed);
 					}
-					if (PlayerHUD->NamedHP && PlayerHUD->NamedHP->GetVisibility() == ESlateVisibility::Hidden)
+					if (PlayerHUD->OverlayWidget->WBPHPNamed && PlayerHUD->OverlayWidget->WBPHPNamed->GetVisibility() == ESlateVisibility::Collapsed)
 					{
-						PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
+						PlayerHUD->OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Visible);
 					}
-					if (NamedWidgetCount == 0)
-					{
-						PlayerHUD->NamedHP = CreateWidget<UMonsterNamedHPWidget>(this, PlayerHUD->NamedHPClass);
-
-						if (PlayerHUD->NamedHP)
-						{
-							PlayerHUD->NamedHP->AddToViewport();
-							PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
-							PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
-						}
-					}
-					else
-					{
-						if (PlayerHUD->NamedHP)
-						{
-							if (PlayerHUD->NamedHP->GetCurrentHP() != NamedMonster->Stat.CurrentLifePoint || PlayerHUD->NamedHP->GetMaxHP() != NamedMonster->Stat.MaxLifePoint)
-							{
-								PlayerHUD->NamedHP->UpdateHPBar(NamedMonster->Stat.CurrentLifePoint, NamedMonster->Stat.MaxLifePoint);
-
-								if (PlayerHUD->NamedHP->GetCurrentHP() < 0.0f)
-								{
-									PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
-								}
-
-								else
-								{
-									PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Visible);
-								}
-							}
-
-							if (PlayerHUD->NamedHP->GetName() != NamedMonster->Name)
-							{
-								PlayerHUD->NamedHP->UpdateName(NamedMonster->Name);
-							}
-						}
-					}
-					++NamedWidgetCount;
 				}
 			}
 		}
@@ -255,26 +179,75 @@ void ATP_TopDownPlayerController::SetupInputComponent()
 
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-	{
+	{	
 		// Setup mouse input events
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &ATP_TopDownPlayerController::OnInputStarted);
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::OnSetDestinationTriggered);
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &ATP_TopDownPlayerController::OnSetDestinationReleased);
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &ATP_TopDownPlayerController::OnSetDestinationReleased);
-
 		// Setup touch input events
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Started, this, &ATP_TopDownPlayerController::OnInputStarted);
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::OnTouchTriggered);
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &ATP_TopDownPlayerController::OnTouchReleased);
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ATP_TopDownPlayerController::OnTouchReleased);
 
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::AttackTriggered);
-
 		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::InteractionTriggered);
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void ATP_TopDownPlayerController::SetupGASInputComponent()
+{
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(GetPawn());
+	ALostArkPlayerState* PS = Cast<ALostArkPlayerState>(MyPlayer->GetPlayerState());
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+
+	if (IsValid(ASC) && IsValid(InputComponent))
+	{
+		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::GASInputPressed, 0);
+	}
+	
+}
+
+void ATP_TopDownPlayerController::GASInputPressed(int32 InputId)
+{
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(GetPawn());
+	ALostArkPlayerState* PS = Cast<ALostArkPlayerState>(MyPlayer->GetPlayerState());
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputId);
+	if (Spec)
+	{
+		Spec->InputPressed = true;
+		if (Spec->IsActive())
+		{
+			ASC->AbilitySpecInputPressed(*Spec);
+		}
+		else
+		{
+			ASC->TryActivateAbility(Spec->Handle);
+		}
+	}
+}
+
+void ATP_TopDownPlayerController::GASInputReleased(int32 InputId)
+{
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(GetPawn());
+	ALostArkPlayerState* PS = Cast<ALostArkPlayerState>(MyPlayer->GetPlayerState());
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent(); 
+
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputId);
+	if (Spec)
+	{
+		Spec->InputPressed = false;
+		if (Spec->IsActive())
+		{
+			ASC->AbilitySpecInputReleased(*Spec);
+		}
 	}
 }
 
@@ -312,7 +285,7 @@ void ATP_TopDownPlayerController::OnSetDestinationTriggered()
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
 	if (ControlledPawn != nullptr)
 	{
-		if (MyPlayer->CurrentState == ECharacterState::Idle || MyPlayer->CurrentState == ECharacterState::Battle)
+		if (MyPlayer->CurrentState == ECharacterState::Idle || MyPlayer->CurrentState == ECharacterState::Battle || MyPlayer->CurrentState == ECharacterState::Combat)
 		{
 			/*MyPlayer->SetPlayerState(ECharacterState::Moving);*/
 			FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
@@ -350,15 +323,15 @@ void ATP_TopDownPlayerController::OnTouchReleased()
 	OnSetDestinationReleased();
 }
 
-void ATP_TopDownPlayerController::AttackTriggered()
-{
-	APawn* ControlledPawn = GetPawn();
-	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
-	if (MyPlayer)
-	{
-		MyPlayer->Attack();
-	}
-}
+//void ATP_TopDownPlayerController::AttackTriggered()
+//{
+//	APawn* ControlledPawn = GetPawn();
+//	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
+//	if (MyPlayer)
+//	{
+//		MyPlayer->Attack();
+//	}
+//}
 
 void ATP_TopDownPlayerController::InteractionTriggered()
 {

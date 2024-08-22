@@ -18,31 +18,24 @@
 #include "../Widget/MonsterBossHPWidget.h"
 #include "../Widget/MonsterNamedHPWidget.h"
 #include "../Widget/MonsterCommonHPWidget.h"
+#include "../Widget/HeadMountHPWidget.h"
 #include "NamedMonster.h"
 #include "BossMonster.h"
 #include "../ChaosDungeon/ChaosDungeonGameState.h"
 #include "../Widget/ProgressWidget.h"
 #include "../Animation/AnimInstance_Monster.h"
 #include "../AbilitySystem/LostArkAbilitySystemComponent.h"
-#include "../AbilitySystem/LostArkAttributeSet.h"
+#include "../AbilitySystem/LostArkMonsterAttributeSet.h"
+#include "../AbilitySystem/GameplayAbility/GA_Attack.h"
+#include "../Widget/OverlayWidget.h"
+#include "GameplayAbilitySpec.h"
+#include "../Tag/LostArkGameplayTag.h"
 
 AMonster::AMonster() : ABaseCharacter()
 {
-	//HP, 생명력
-	Stat.MaxLifePoint = 5000.f;
-	Stat.CurrentLifePoint = Stat.MaxLifePoint;
-
-	//공격력
-	Stat.ATK = 300.f;
-
-	//방어력
-	Stat.DEF = 400.f;
-	Stat.Block = (Stat.DEF / (Stat.DEF + 6500.f)) * 100.f;
-
-	//경험치
-	Stat.EXP = 0.0f;
-
 	Name = "Common Monster";
+
+	AnimInstance = Cast<UAnimInstance_Monster>(GetMesh()->GetAnimInstance());
 
 	HeadMountHPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HeadMountHPBar"));
 	HeadMountHPBarWidget->SetupAttachment(RootComponent);
@@ -52,7 +45,7 @@ AMonster::AMonster() : ABaseCharacter()
 	HeadMountHPBarWidget->SetCastShadow(false);
 	HeadMountHPBarWidget->SetHiddenInGame(true);
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClassFinder(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/UI/HUD/WB_HP_HeadMount'"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClassFinder(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/UI/HUD/WBP_HP_HeadMount'"));
 	if (WidgetClassFinder.Succeeded())
 	{
 		HeadMountHPBarWidget->SetWidgetClass(WidgetClassFinder.Class);
@@ -68,14 +61,12 @@ AMonster::AMonster() : ABaseCharacter()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
-	AttributeSet = CreateDefaultSubobject<ULostArkAttributeSet>(TEXT("AttributeSet"));
+	AttributeSet = CreateDefaultSubobject<ULostArkMonsterAttributeSet>(TEXT("AttributeSet"));
 }
 
 void AMonster::PlayDead()
 {
-	int32 RandomNumber = FMath::RandRange(1, 2);
-	FString SectionName = FString::Printf(TEXT("Death_%d"), RandomNumber);
-	PlayAnimMontage(DeathMontage, 1.0f, FName(*SectionName));
+	PlayAnimMontage(DeathMontage, 1.0f);
 }
 
 void AMonster::Attack()
@@ -85,21 +76,45 @@ void AMonster::Attack()
 
 void AMonster::PlayHitReaction()
 {
-	int32 RandomNumber = FMath::RandRange(1, 2);
-	FString SectionName = FString::Printf(TEXT("HitReaction_%d"), RandomNumber);
-	PlayAnimMontage(HitReactionMontage, 1.0f, FName(*SectionName));
+	if (!AnimInstance->Montage_IsPlaying(AttackMontage))
+	{
+		PlayAnimMontage(HitReactionMontage, 1.0f);
+	}
 }
 
-float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+void AMonster::PossessedBy(AController* NewController)
 {
-	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
-	AMyPlayer* Player = Cast<AMyPlayer>(DamageCauser);
+	Super::PossessedBy(NewController);
 
-	if (Stat.CurrentLifePoint > 0)
+	InitAbilityActorInfo();
+
+	ULostArkMonsterAttributeSet* CurrentAttributeSet = Cast<ULostArkMonsterAttributeSet>(GetAttributeSet());
+	CurrentAttributeSet->bIsSet = true;
+	if (CurrentAttributeSet)
 	{
-		Stat.CurrentLifePoint -= Damage;
+		CurrentAttributeSet->OnOutOfHealth.AddDynamic(this, &ThisClass::OnOutOfHealth);
+		CurrentAttributeSet->OnGetDamage.AddDynamic(this, &ThisClass::OnGetDamage);
+	}
+
+	for (const auto& StartAbility : StartAbilities)
+	{
+		FGameplayAbilitySpec StartSpec(StartAbility);
+		AbilitySystemComponent->GiveAbility(StartSpec);
+	}
+}
+
+void AMonster::OnOutOfHealth()
+{
+	SetDead();
+}
+
+void AMonster::OnGetDamage(AActor* DamageCauser, float Damage)
+{
+	AMyPlayer* Player = Cast<AMyPlayer>(DamageCauser);
+	if (Player)
+	{
+		ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(Player->GetController());
+		APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 		if (PlayerHUD)
 		{
 			if (DamageClass)
@@ -138,91 +153,90 @@ float AMonster::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 					wDamage->AddToViewport();
 					wDamage->UpdateDamage(RoundDamage);
 					wDamage->SetPositionInViewport(ScreenLocation, true);
+
+					PlayHitReaction();
 				}
 			}
-			if (MonsterType == EMonsterType::Boss)
+
+			if (HeadMountHPBarWidget && MonsterType != EMonsterType::Boss)
 			{
-				if (PlayerHUD->BossHP)
-				{
-					PlayerHUD->BossHP->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
-				}
+				HeadMountHPBarWidget->SetHiddenInGame(false);
 			}
 		}
-		PlayHitReaction();
-		if (Stat.CurrentLifePoint < 0)
-		{
-			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			isAlive = false;
-			PlayDead();
-			FTimerHandle DeathTimer;
-			GetWorld()->GetTimerManager().SetTimer(DeathTimer, this, &AMonster::Death, 1.5f, false);
-			//콜리젼 해제 + Destroy
-		}
 	}
 
-	if (HeadMountHPBarWidget && MonsterType != EMonsterType::Boss)
+}
+
+void AMonster::SetDead()
+{
+	Super::SetDead();
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(Target);
+	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(MyPlayer->GetController());
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+	if (MonsterType == EMonsterType::Common)
 	{
-		HeadMountHPBarWidget->SetHiddenInGame(false);
-		UpdateHeadMountHP(Stat.CurrentLifePoint, Stat.MaxLifePoint);
+		PlayerHUD->OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	else if (MonsterType == EMonsterType::Named)
+	{
+		PlayerHUD->OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	else if (MonsterType == EMonsterType::Boss)
+	{
+		PlayerHUD->OverlayWidget->WBPHPBoss->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	
+	UAbilitySystemComponent* PlayerASC = MyPlayer->GetAbilitySystemComponent();
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddInstigator(MyPlayer, MyPlayer->GetController());
+	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, EffectContext);
+	if (EffectSpecHandle.IsValid())
+	{
+		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), PlayerASC);
 	}
 
-	return 0.0f;
+	FTimerHandle DeadTimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda(
+		[&]()
+		{
+			Destroy();
+		}
+	), DeadEventDelayTime, false);
 }
 
 void AMonster::BeginPlay()
 {
 	Super::BeginPlay();
 
-}
-
-void AMonster::UpdateHeadMountHP(float CurrentHP, float MaxHP)
-{
-	if (HeadMountHPBarWidget && HeadMountHPBarWidget->GetUserWidgetObject())
+	if (UHeadMountHPWidget* HeadMountHP = Cast<UHeadMountHPWidget>(HeadMountHPBarWidget->GetUserWidgetObject()))
 	{
-		UHeadMountHPWidget* HeadMountHP = Cast<UHeadMountHPWidget>(HeadMountHPBarWidget->GetUserWidgetObject());
-		if (HeadMountHP)
-		{
-			HeadMountHP->UpdateHPBar(CurrentHP, MaxHP);
-		}
+		HeadMountHP->SetWidgetController(this);
+	}
+
+	if (const ULostArkMonsterAttributeSet* MonsterAttributeSet = Cast< ULostArkMonsterAttributeSet>(AttributeSet))
+	{
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MonsterAttributeSet->GetMonsterCurrentLifePointAttribute()).AddLambda(
+			[this](const FOnAttributeChangeData& Data)
+			{
+				OnMonsterCurrentLifePointChanged.Broadcast(Data.NewValue);
+			}
+		);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MonsterAttributeSet->GetMonsterMaxLifePointAttribute()).AddLambda(
+			[this](const FOnAttributeChangeData& Data)
+			{
+				OnMonsterMaxLifePointChanged.Broadcast(Data.NewValue);
+			}
+		);
+
+		OnMonsterCurrentLifePointChanged.Broadcast(MonsterAttributeSet->GetMonsterCurrentLifePoint());
+		OnMonsterMaxLifePointChanged.Broadcast(MonsterAttributeSet->GetMonsterMaxLifePoint());
 	}
 }
 
-void AMonster::Death()
+void AMonster::InitAbilityActorInfo()
 {
-	K2_DestroyActor();
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	Cast<ULostArkAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 
-	AChaosDungeonGameState* DungeonState = GetWorld()->GetGameState<AChaosDungeonGameState>();
-
-	if (MonsterType == EMonsterType::Boss)
-	{
-		PlayerHUD->BossHP->bIsAlive = false;
-		PlayerHUD->BossHP->SetVisibility(ESlateVisibility::Hidden);
-		--DungeonState->CurrentMonsterCount;
-	}
-	else if (MonsterType == EMonsterType::Named)
-	{
-		PlayerHUD->NamedHP->SetVisibility(ESlateVisibility::Hidden);
-		--DungeonState->CurrentMonsterCount;
-		--DungeonState->StageNamedCount;
-	}
-	else
-	{
-		PlayerHUD->CommonHP->SetVisibility(ESlateVisibility::Hidden);
-		--DungeonState->CurrentMonsterCount;
-	}
-
-	if (PlayerHUD->ProgressClass)
-	{
-		if (PlayerHUD->Progress)
-		{
-			PlayerHUD->Progress->UpdateProgress(MonsterType);
-		}
-	}
-}
-
-void AMonster::Tick(float DeltaSeconds)
-{
-	UpdateHeadMountHP(Stat.CurrentLifePoint, Stat.MaxLifePoint);
+	InitializeDefaultAttributes();
 }

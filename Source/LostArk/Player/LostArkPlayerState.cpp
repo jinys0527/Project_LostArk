@@ -3,7 +3,8 @@
 
 #include "LostArkPlayerState.h"
 #include "../AbilitySystem/LostArkAbilitySystemComponent.h"
-#include "../AbilitySystem/LostArkAttributeSet.h"
+#include "../AbilitySystem/LostArkPlayerAttributeSet.h"
+#include "Net/UnrealNetwork.h"
 
 ALostArkPlayerState::ALostArkPlayerState()
 {
@@ -11,12 +12,25 @@ ALostArkPlayerState::ALostArkPlayerState()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
-	AttributeSet = CreateDefaultSubobject<ULostArkAttributeSet>(TEXT("AttributeSet"));
-	
+	AttributeSet = CreateDefaultSubobject<ULostArkPlayerAttributeSet>(TEXT("AttributeSet"));
+
 	NetUpdateFrequency = 100.f;
+}
+
+void ALostArkPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ALostArkPlayerState, Level);
 }
 
 UAbilitySystemComponent* ALostArkPlayerState::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void ALostArkPlayerState::OnRep_Level(float OldLevel)
+{
+	//UI
+	//»ç¿îµå
 }

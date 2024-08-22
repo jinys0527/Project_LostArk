@@ -64,20 +64,25 @@ public:
 	UFUNCTION()
 	void HandleHUDNamedMonster(APlayerHUD* PlayerHUD, ANamedMonster* NamedMonster);
 
-
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<AMonster> MonsterClass;
-
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<ANamedMonster> NamedClass;
 
 	static int32 MonsterWidgetCount;
 
 	static int32 NamedWidgetCount;
 
+	void SetupGASInputComponent();
+	void GASInputPressed(int32 InputId);
+	void GASInputReleased(int32 InputId);
+
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
 	virtual void SetupInputComponent() override;
+
 	
 	// To add mapping context
 	virtual void BeginPlay();

@@ -19,40 +19,13 @@
 #include "Components/TextBlock.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "../Animation/AnimInstance_Player.h"
+#include "../Player/LostArkPlayerState.h"
+#include "../AbilitySystem/LostArkAbilitySystemComponent.h"
+#include "../AbilitySystem/LostArkPlayerAttributeSet.h"
+#include "../Tag/LostArkGameplayTag.h"
 
 AMyPlayer::AMyPlayer() : ABaseCharacter()
 {
-	//HP, 생명력
-	Stat.HP = 3000.f;
-	Stat.HPCoefficient = 2.2f;
-	Stat.MaxLifePoint = Stat.HP * Stat.HPCoefficient;
-	Stat.CurrentLifePoint = Stat.MaxLifePoint;
-
-	//MP
-	Stat.MaxMP = 1000.f;
-	Stat.CurrentMP = Stat.MaxMP;
-
-	//공격력
-	Stat.Ability = 4500.f;
-	WeaponATK = 3000.0f;
-	Stat.ATK = (float)FMath::Sqrt(((double)Stat.Ability * (double)WeaponATK) / (double)6);
-
-	//방어력
-	Stat.DEFCoefficient = 1.1f;
-	Stat.ArmorDEF = 900.f;
-	Stat.DEF = Stat.DEFCoefficient * Stat.ArmorDEF;
-	Stat.Block = (Stat.DEF / (Stat.DEF + 6500.f)) * 100.f;
-
-	//치명타 관련
-	Stat.CriticalHitRate = 0.3f;
-	Stat.CriticalDamageIncrease = 2.0f;
-
-	//시너지
-	Stat.DamageIncrease = 1.0f;
-
-	//경험치
-	Stat.EXP = 0.0f;
-
 	bIsEquipped = false;
 
 	bIsAttacking = false;
@@ -61,12 +34,7 @@ AMyPlayer::AMyPlayer() : ABaseCharacter()
 
 	SetPlayerState(ECharacterState::Idle);
 
-	static ConstructorHelpers::FClassFinder<AGreatSword> GreatSword(TEXT("/Script/Engine.Blueprint'/Game/Blueprints/Weapons/BP_GreatSword'"));
-
-	if (GreatSword.Succeeded() && GreatSword.Class != NULL)
-	{
-		GreatSwordClass = GreatSword.Class;
-	}
+	AnimInstance = Cast<UAnimInstance_Player>(GetMesh()->GetAnimInstance());
 
 	// Set size for player capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -108,22 +76,10 @@ void AMyPlayer::BeginPlay()
 
 	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
-	PlayerHUD->PlayerStatus->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
-	PlayerHUD->PlayerStatus->UpdateMPBar(Stat.CurrentMP, Stat.MaxMP);
-
 	if (USkeletalMeshComponent* MeshComp = GetMesh())
 	{
 		PlayerAnimInstance = Cast<UAnimInstance_Player>(MeshComp->GetAnimInstance());
 	}
-
-	FTimerHandle UpdateStatusTimer;
-	FTimerHandle RegenTimer;
-
-	GetWorld()->GetTimerManager().SetTimer(RegenTimer, this, &AMyPlayer::Regen, 1.0f, true);
-	GetWorld()->GetTimerManager().SetTimer(UpdateStatusTimer, [this, PlayerHUD]()
-		{
-			UpdateStatus(PlayerHUD);
-		}, 0.5f, true);
 }
 
 void AMyPlayer::Tick(float DeltaSeconds)
@@ -138,9 +94,7 @@ void AMyPlayer::SetPlayerState(ECharacterState NewState)
 
 void AMyPlayer::PlayDead()
 {
-	int32 RandomNumber = FMath::RandRange(1, 2);
-	FString SectionName = FString::Printf(TEXT("Death_%d"), RandomNumber);
-	PlayAnimMontage(DeathMontage, 1.0f, FName(*SectionName));
+	PlayAnimMontage(DeathMontage, 1.0f);
 }
 
 void AMyPlayer::PlayHitReaction()
@@ -149,9 +103,12 @@ void AMyPlayer::PlayHitReaction()
 	{
 		PlayAnimMontage(HitReactionMontage, 1.0f);
 	}
-	else if (CurrentState == ECharacterState::Battle || CurrentState == ECharacterState::Attacking || CurrentState == ECharacterState::Combat)
+	if (AnimInstance)
 	{
-		PlayAnimMontage(HitReactionBattleMontage, 1.0f);
+		if ((CurrentState == ECharacterState::Battle || CurrentState == ECharacterState::Attacking || CurrentState == ECharacterState::Combat) && !AnimInstance->Montage_IsPlaying(AttackMontage))
+		{
+			PlayAnimMontage(HitReactionBattleMontage, 1.0f);
+		}
 	}
 }
 
@@ -172,7 +129,6 @@ void AMyPlayer::Attack()
 			CurrentState != ECharacterState::Idle)
 		{
 			TimeCount = 0;
-			PlayAnimMontage(AttackMontage);
 		}
 	}
 	else if (!bIsEquipped)
@@ -187,81 +143,64 @@ void AMyPlayer::PlayResurrection()
 	PlayAnimMontage(ResurrectionMontage);
 }
 
-float AMyPlayer::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+void AMyPlayer::SetDead()
 {
-	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
-	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+	Super::SetDead();
 
-	if (Stat.CurrentLifePoint > 0)
-	{
-		Stat.CurrentLifePoint -= Damage;
-		if (PlayerHUD)
-		{
-			if (DamageClass)
-			{
-				wDamage = CreateWidget<UDamageWidget>(PC, DamageClass);
-				if (wDamage)
-				{
-					wDamage->SynchronizeProperties();
-					wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.708376, 0.028426, 0.013702));
-					wDamage->DamageValue->SetShadowOffset(FVector2D(0, 0));
-					wDamage->DamageValue->SetShadowColorAndOpacity(FLinearColor::Transparent);
-
-					FVector PlayerLocation = GetActorLocation();
-					FVector MonsterLocation = DamageCauser->GetActorLocation();
-
-					FVector DirectionVector = MonsterLocation - PlayerLocation;
-					DirectionVector.Normalize();
-
-					float DesiredDistance = 30.0f;
-					WidgetLocation = PlayerLocation + (DirectionVector * DesiredDistance);
-
-					WidgetLocation.Z = 100.0f;
-
-					FVector2D ScreenLocation;
-					UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), WidgetLocation, ScreenLocation);
-
-					int32 RoundDamage = int32(round(Damage));
-					wDamage->AddToViewport();
-					wDamage->UpdateDamage(RoundDamage);
-					wDamage->SetPositionInViewport(ScreenLocation, true);
-				}
-			}
-			if (PlayerHUD->PlayerStatusClass)
-			{
-				if (PlayerHUD->PlayerStatus)
-				{
-					if (PlayerHUD->PlayerStatus->GetCurrentHP() != Stat.CurrentLifePoint)
-					{
-						PlayerHUD->PlayerStatus->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
-					}
-					if (PlayerHUD->PlayerStatus->GetCurrentMP() != Stat.CurrentMP)
-					{
-						PlayerHUD->PlayerStatus->UpdateMPBar(Stat.CurrentMP, Stat.MaxMP);
-					}
-				}
-			}
-		}
-
-		PlayHitReaction();
-
-	}
-	else
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
 	{
 		Tags.Remove(FName("Player"));
-		if (PC)
-		{
-			PC->DisableInput(PC);
-			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
-		isAlive = false;
-		PlayDead();
-		SetPlayerState(ECharacterState::Death);
+		DisableInput(PlayerController);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+}
 
-	return 0.0f;
+void AMyPlayer::OnOutOfHealth()
+{
+	SetDead();
+}
+
+void AMyPlayer::OnGetDamage(AActor* DamageCauser, float Damage)
+{
+	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+	if (PlayerHUD)
+	{
+		if (DamageClass)
+		{
+			wDamage = CreateWidget<UDamageWidget>(PC, DamageClass);
+			if (wDamage)
+			{
+				wDamage->SynchronizeProperties();
+				wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.708376, 0.028426, 0.013702));
+				wDamage->DamageValue->SetShadowOffset(FVector2D(0, 0));
+				wDamage->DamageValue->SetShadowColorAndOpacity(FLinearColor::Transparent);
+
+				FVector PlayerLocation = GetActorLocation();
+				FVector MonsterLocation = DamageCauser->GetActorLocation();
+
+				FVector DirectionVector = MonsterLocation - PlayerLocation;
+				DirectionVector.Normalize();
+
+				float DesiredDistance = 30.0f;
+				WidgetLocation = PlayerLocation + (DirectionVector * DesiredDistance);
+
+				WidgetLocation.Z = 100.0f;
+
+				FVector2D ScreenLocation;
+				UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), WidgetLocation, ScreenLocation);
+
+				int32 RoundDamage = int32(round(Damage));
+				wDamage->AddToViewport();
+				wDamage->UpdateDamage(RoundDamage);
+				wDamage->SetPositionInViewport(ScreenLocation, true);
+
+				PlayHitReaction();
+			}
+		}
+	}
 }
 
 void AMyPlayer::Resurrection()
@@ -272,7 +211,6 @@ void AMyPlayer::Resurrection()
 		PlayResurrection();
 		Tags.AddUnique(FName("Player"));
 		SetPlayerState(ECharacterState::Idle);
-		Stat.CurrentLifePoint = Stat.MaxLifePoint;
 		PC->EnableInput(PC);
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -316,8 +254,6 @@ void AMyPlayer::AttachSword()
 		EquippedGreatSword = GetWorld()->SpawnActor<AGreatSword>(GreatSwordClass, SpawnLocation, SpawnRotation);
 		if (EquippedGreatSword)
 		{
-			WeaponATK = EquippedGreatSword->WeaponATK;
-			Stat.ATK = (float)FMath::Sqrt(((double)Stat.Ability * (double)WeaponATK) / (double)6);
 			FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 			EquippedGreatSword->AttachToComponent(GetMesh(), AttachmentRules, TEXT("Weapon_Socket"));
 		}
@@ -328,7 +264,7 @@ void AMyPlayer::OnTimer()
 {
 	++TimeCount;
 
-	if (TimeCount >= 5)
+	if (TimeCount >= 8)
 	{
 		UnEquipSword();
 		GetWorld()->GetTimerManager().ClearTimer(StepHandle);
@@ -336,18 +272,88 @@ void AMyPlayer::OnTimer()
 	}
 }
 
-void AMyPlayer::Regen()
+void AMyPlayer::PossessedBy(AController* NewController)
 {
-	if (CurrentState == ECharacterState::Idle ||
-		CurrentState == ECharacterState::Battle)
+	Super::PossessedBy(NewController);
+
+	// Init ability actor info for the Server
+	InitAbilityActorInfo();
+
+	check(AbilitySystemComponent);
+	check(GameplayEffectClass);
+	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffectClass, GetPlayerLevel(), ContextHandle);
+
+	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
+	const ULostArkPlayerAttributeSet* CurrentAttributeSet = AbilitySystemComponent->GetSet<ULostArkPlayerAttributeSet>();
+	if (CurrentAttributeSet)
 	{
-		Stat.CurrentLifePoint += ceil(Stat.MaxLifePoint * 0.0006f);
-		Stat.CurrentMP += ceil(Stat.MaxMP * 0.0006f);
+		CurrentAttributeSet->OnOutOfHealth.AddDynamic(this, &ThisClass::OnOutOfHealth);
+		CurrentAttributeSet->OnGetDamage.AddDynamic(this, &ThisClass::OnGetDamage);
 	}
+
+	for (const auto& StartAbility : StartAbilities)
+	{
+		FGameplayAbilitySpec StartSpec(StartAbility);
+		AbilitySystemComponent->GiveAbility(StartSpec);
+	}
+
+	for (const auto& StartInputAbility : StartInputAbilities)
+	{
+		FGameplayAbilitySpec StartSpec(StartInputAbility.Value);
+		StartSpec.InputID = StartInputAbility.Key;
+		AbilitySystemComponent->GiveAbility(StartSpec);
+	}
+
+	APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
+	ATP_TopDownPlayerController* LostArkPlayerController = Cast<ATP_TopDownPlayerController>(PlayerController);
+	LostArkPlayerController->SetupGASInputComponent();
 }
 
-void AMyPlayer::UpdateStatus(APlayerHUD* PlayerHUD)
+void AMyPlayer::OnRep_PlayerState()
 {
-	PlayerHUD->PlayerStatus->UpdateHPBar(Stat.CurrentLifePoint, Stat.MaxLifePoint);
-	PlayerHUD->PlayerStatus->UpdateMPBar(Stat.CurrentMP, Stat.MaxMP);
+	Super::OnRep_PlayerState();
+
+	//Init ability actor info for the Client
+	InitAbilityActorInfo();
+}
+
+float AMyPlayer::GetPlayerLevel()
+{
+	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
+	check(LostArkPlayerState);
+	return LostArkPlayerState->GetPlayerLevel();
+}
+
+void AMyPlayer::LevelUP()
+{
+	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
+	check(LostArkPlayerState);
+	LostArkPlayerState->LevelUP();
+	check(AbilitySystemComponent);
+	check(GameplayEffectClass);
+	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffectClass, GetPlayerLevel(), ContextHandle);
+}
+
+void AMyPlayer::InitAbilityActorInfo()
+{
+	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
+	check(LostArkPlayerState);
+	LostArkPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(LostArkPlayerState, this);
+	Cast<ULostArkAbilitySystemComponent>(LostArkPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
+	AbilitySystemComponent = Cast<ULostArkAbilitySystemComponent>(LostArkPlayerState->GetAbilitySystemComponent());
+	AttributeSet = LostArkPlayerState->GetAttributeSet();
+
+	if (ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController()))
+	{
+		if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD()))
+		{
+			PlayerHUD->InitOverlay(PC, LostArkPlayerState, AbilitySystemComponent, AttributeSet);
+		}
+	}
+
+	InitializeDefaultAttributes();
 }

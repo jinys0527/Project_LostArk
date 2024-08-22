@@ -20,6 +20,10 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	void NotifyAbilityStart();
+
+	void NotifyAbilityEnd();
+
 	UPROPERTY(EditAnywhere)
 	float AcceptanceRadius = 30;
 
