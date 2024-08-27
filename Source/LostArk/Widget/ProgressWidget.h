@@ -39,9 +39,6 @@ public:
 	UImage* Highlight;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UImage* Exit;
-
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UImage* Frame;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))

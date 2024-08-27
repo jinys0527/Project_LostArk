@@ -93,8 +93,8 @@ protected:
 	void OnSetDestinationReleased();
 	void OnTouchTriggered();
 	void OnTouchReleased();
-	void AttackTriggered();
-	void InteractionTriggered();
+	void InteractionStarted();
+	void InteractionReleased();
 
 private:
 	FVector CachedDestination;

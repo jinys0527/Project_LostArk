@@ -86,7 +86,7 @@ void UBTTask_AttackMelee::PlayAttackAnimation(AMonster* Monster, AMyPlayer* Targ
 			UAbilitySystemComponent* AbilitySystemComponent = Monster->GetAbilitySystemComponent();
 			if (AbilitySystemComponent)
 			{
-				AbilitySystemComponent->TryActivateAbilityByClass(UGA_Attack::StaticClass());
+				AbilitySystemComponent->TryActivateAbilityByClass(Monster->AttackAbilityClass);
 			}
 		}
 	}

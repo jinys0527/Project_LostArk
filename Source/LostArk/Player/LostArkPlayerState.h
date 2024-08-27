@@ -23,9 +23,17 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
-	FORCEINLINE float GetPlayerLevel() const { return Level; }
+	FORCEINLINE float GetPlayerLevel() { return Level; }
 
-	FORCEINLINE void LevelUP() { ++Level; }
+	FORCEINLINE float GetPlayerExpeditionLevel() { return ExpeditionLevel; }
+
+	FORCEINLINE void LevelUP() { Level++; }
+
+	FORCEINLINE void ExpeditionLevelUP() { ExpeditionLevel++; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 Feathers;
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
@@ -37,6 +45,12 @@ private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Level)
 	float Level = 1.0f;
 
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_ExpeditionLevel)
+	float ExpeditionLevel = 1.0f;
+
 	UFUNCTION()
-	void OnRep_Level(float OldLevel);
+	void OnRep_Level();
+
+	UFUNCTION()
+	void OnRep_ExpeditionLevel ();
 };

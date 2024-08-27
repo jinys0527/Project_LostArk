@@ -76,9 +76,12 @@ void AMonster::Attack()
 
 void AMonster::PlayHitReaction()
 {
-	if (!AnimInstance->Montage_IsPlaying(AttackMontage))
+	if (AnimInstance)
 	{
-		PlayAnimMontage(HitReactionMontage, 1.0f);
+		if (!AnimInstance->Montage_IsPlaying(AttackMontage))
+		{
+			PlayAnimMontage(HitReactionMontage, 1.0f);
+		}
 	}
 }
 
@@ -188,7 +191,7 @@ void AMonster::SetDead()
 	
 	UAbilitySystemComponent* PlayerASC = MyPlayer->GetAbilitySystemComponent();
 	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-	EffectContext.AddInstigator(MyPlayer, MyPlayer->GetController());
+	EffectContext.AddInstigator(this, GetController());
 	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, EffectContext);
 	if (EffectSpecHandle.IsValid())
 	{

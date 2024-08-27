@@ -21,6 +21,7 @@ class UChatWidget;
 class UStatusBarWidget;
 class UMinimapTrixionWidget;
 class UMinimapLogHillWidget;
+class URevivalWidget;
 
 /**
  * 
@@ -108,4 +109,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UMinimapLogHillWidget* WBPMiniMapLogHill;
+
+	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> Revivalclass;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	URevivalWidget* WBPRevival;
 };

@@ -20,16 +20,19 @@ ULostArkPlayerAttributeSet::ULostArkPlayerAttributeSet()
 	InitEndurance(10.0f);
 	InitExpertise(10.0f);
 
+	InitRequiredEXP(10.0f);
+	InitExpeditionRequiredEXP(10.0f);
+
 	InitWeaponATK(69.0f);
 	InitAbility(206.0f);
 	InitAP(0.f);
 	InitMaxAP(0.f);
 	InitArmorDEF(140.909090f);
-	
+
 	InitCritDamage(2.0f);
 	InitDamageIncrease(0.f);
 	InitDodge(0.f);
-	
+
 	InitEXP(0.f);
 	InitHitRate(1.0f);
 }
@@ -56,6 +59,8 @@ void ULostArkPlayerAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, Expertise, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, CritDamage, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, RequiredEXP, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, ExpeditionEXP, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, ExpeditionRequiredEXP, COND_None, REPNOTIFY_Always);
 
 	/*
 	 * Secondary Attributes
@@ -83,7 +88,7 @@ void ULostArkPlayerAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, BloodRushDamage, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, DebuffTimeReduction, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, Shield, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, Healing  , COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, Healing, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkPlayerAttributeSet, RageTimeBonus, COND_None, REPNOTIFY_Always);
 
 	/*
@@ -134,7 +139,7 @@ void ULostArkPlayerAttributeSet::SetEffectProperties(const FGameplayEffectModCal
 }
 
 void ULostArkPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
-{	
+{
 	Super::PostGameplayEffectExecute(Data);
 
 	float MinimumHealth = 0.0f;
@@ -149,7 +154,7 @@ void ULostArkPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffect
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
 		SetCurrentLifePoint(FMath::Clamp(GetCurrentLifePoint() - GetDamage(), MinimumHealth, GetMaxLifePoint()));
-		
+
 		AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
 		AActor* InstigatorActor = nullptr;
 
@@ -164,13 +169,35 @@ void ULostArkPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffect
 	}
 	if (Data.EvaluatedData.Attribute == GetEXPAttribute())
 	{
-		float OverEXP = GetRequiredEXP() - GetEXP();
-		if (OverEXP >= 0)
+		float CurrentEXP = GetEXP();
+		float CurrentRequiredEXP = GetRequiredEXP();
+		float OverEXP = CurrentEXP - CurrentRequiredEXP;
+		AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
+		AMyPlayer* MyPlayer = Cast<AMyPlayer>(TargetActor);
+
+		while (OverEXP >= 0)
 		{
-			AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
-			AMyPlayer* MyPlayer = Cast<AMyPlayer>(TargetActor);
 			MyPlayer->LevelUP();
 			SetEXP(OverEXP);
+			CurrentRequiredEXP = GetRequiredEXP();
+			OverEXP = GetEXP() - CurrentRequiredEXP;
+		}	
+	}
+	if (Data.EvaluatedData.Attribute == GetExpeditionEXPAttribute())
+	{
+		float CurrentEXP = GetExpeditionEXP();
+		float CurrentRequiredEXP = GetExpeditionRequiredEXP();
+		float OverEXP = CurrentEXP - CurrentRequiredEXP;
+
+		AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
+		AMyPlayer* MyPlayer = Cast<AMyPlayer>(TargetActor);
+
+		while (OverEXP >= 0)
+		{
+			MyPlayer->ExpeditionLevelUP();
+			SetEXP(OverEXP);
+			CurrentRequiredEXP = GetExpeditionRequiredEXP();
+			OverEXP = GetExpeditionEXP() - CurrentRequiredEXP;
 		}
 	}
 
@@ -187,7 +214,7 @@ void ULostArkPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffect
 }
 
 /*
- * Primary Attribute Functions	
+ * Primary Attribute Functions
  */
 
 void ULostArkPlayerAttributeSet::OnRep_HP(const FGameplayAttributeData& OldHP) const
@@ -255,10 +282,10 @@ void ULostArkPlayerAttributeSet::OnRep_DamageIncreaseOnIncapacitated(const FGame
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ULostArkPlayerAttributeSet, DamageIncreaseOnIncapacitated, OldDamageIncreaseOnIncapacitated);
 }
 
-/*	
+/*
  * Secondary Attribute Functions
  */
- 
+
 void ULostArkPlayerAttributeSet::OnRep_MaxLifePoint(const FGameplayAttributeData& OldMaxLifePoint) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ULostArkPlayerAttributeSet, MaxLifePoint, OldMaxLifePoint);
@@ -327,6 +354,16 @@ void ULostArkPlayerAttributeSet::OnRep_CritDamage(const FGameplayAttributeData& 
 void ULostArkPlayerAttributeSet::OnRep_RequiredEXP(const FGameplayAttributeData& OldRequiredEXP) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ULostArkPlayerAttributeSet, RequiredEXP, OldRequiredEXP);
+}
+
+void ULostArkPlayerAttributeSet::OnRep_ExpeditionEXP(const FGameplayAttributeData& OldExpeditionEXP) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULostArkPlayerAttributeSet, ExpeditionEXP, OldExpeditionEXP);
+}
+
+void ULostArkPlayerAttributeSet::OnRep_ExpeditionRequiredEXP(const FGameplayAttributeData& OldExpeditionRequiredEXP) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULostArkPlayerAttributeSet, ExpeditionRequiredEXP, OldExpeditionRequiredEXP);
 }
 
 void ULostArkPlayerAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed) const

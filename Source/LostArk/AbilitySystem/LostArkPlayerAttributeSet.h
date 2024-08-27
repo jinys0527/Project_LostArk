@@ -108,6 +108,14 @@ public:
 	FGameplayAttributeData RequiredEXP;
 	ATTRIBUTE_ACCESSORS(ULostArkPlayerAttributeSet, RequiredEXP);
 
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ExpeditionEXP, Category = "Primary Attributes")
+	FGameplayAttributeData ExpeditionEXP;
+	ATTRIBUTE_ACCESSORS(ULostArkPlayerAttributeSet, ExpeditionEXP);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ExpeditionRequiredEXP, Category = "Primary Attributes")
+	FGameplayAttributeData ExpeditionRequiredEXP;
+	ATTRIBUTE_ACCESSORS(ULostArkPlayerAttributeSet, ExpeditionRequiredEXP);
+
 	/*
 	 * Secondary Attributes
 	 */
@@ -273,6 +281,12 @@ public:
 
 	UFUNCTION()
 	void OnRep_RequiredEXP(const FGameplayAttributeData& OldRequiredEXP) const;
+
+	UFUNCTION()
+	void OnRep_ExpeditionEXP(const FGameplayAttributeData& OldExpeditionEXP) const;
+
+	UFUNCTION()
+	void OnRep_ExpeditionRequiredEXP(const FGameplayAttributeData& OldExpeditionRequiredEXP) const;
 
 	 /*
 	  * Secondary Attribute Functions

@@ -6,6 +6,8 @@
 #include "LostArkUserWidget.h"
 #include "MinimapPlayerWidget.generated.h"
 
+class UImage;
+
 /**
  * 
  */
@@ -14,4 +16,7 @@ class LOSTARK_API UMinimapPlayerWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
 	
+public:
+	UPROPERTY(meta = (BindWidget))
+	UImage* Player;
 };

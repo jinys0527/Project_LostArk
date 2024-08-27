@@ -17,8 +17,11 @@
 #include "../Widget/OverlayWidget.h"
 #include "../TP_TopDown/TP_TopDownPlayerController.h"
 #include "../Widget/OverlayWidgetController.h"
+#include "../Widget/EXPBattleWidget.h"
 #include "../Widget/EXPExpeditionWidget.h"
 #include "../Widget/MinimapLogHillWidget.h"
+#include "../Widget/RevivalWidget.h"
+#include "../Player/LostArkPlayerState.h"
 
 
 APlayerHUD::APlayerHUD() : AHUD()
@@ -48,13 +51,15 @@ void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 {
 	checkf(OverlayWidgetClass, TEXT("Overlay Widget Class Uninitialized, please fill out BP_PlayerHUD"));
 	checkf(OverlayWidgetControllerClass, TEXT("Overlay Widget Controller Class Uninitialized, please fill out BP_PlayerHUD"));
-
+	
 	UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), OverlayWidgetClass);
 	OverlayWidget = Cast<UOverlayWidget>(Widget);
 	const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
 	UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParams);
 	OverlayWidget->SetWidgetController(WidgetController);
 	WidgetController->BroadcastInitialValues();
+
+	ALostArkPlayerState* LostArkPlayerState = Cast<ALostArkPlayerState>(PS);
 	if (OverlayWidget->WBPHPBoss)
 	{
 		OverlayWidget->WBPHPBoss->SetVisibility(ESlateVisibility::Collapsed);
@@ -75,13 +80,24 @@ void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 	{
 		OverlayWidget->WBPProgress->SetVisibility(ESlateVisibility::Collapsed);
 	}
+	if (OverlayWidget->WBPExpBattle)
+	{
+		OverlayWidget->WBPExpBattle->UpdateBattleLevel(LostArkPlayerState->GetPlayerLevel());
+		OverlayWidget->WBPExpBattle->UpdateExpeditionLevel(LostArkPlayerState->GetPlayerExpeditionLevel());
+	}
 	if (OverlayWidget->WBPExpExpedition)
 	{
+		OverlayWidget->WBPExpExpedition->UpdateBattleLevel(LostArkPlayerState->GetPlayerLevel());
+		OverlayWidget->WBPExpExpedition->UpdateExpeditionLevel(LostArkPlayerState->GetPlayerExpeditionLevel());
 		OverlayWidget->WBPExpExpedition->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	if (OverlayWidget->WBPMiniMapLogHill)
 	{
 		OverlayWidget->WBPMiniMapLogHill->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (OverlayWidget->WBPRevival)
+	{
+		OverlayWidget->WBPRevival->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	Widget->AddToViewport();
 }

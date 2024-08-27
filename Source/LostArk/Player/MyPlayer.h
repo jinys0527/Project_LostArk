@@ -8,6 +8,8 @@
 #include "MyPlayer.generated.h"
 
 
+class AGreatSword;
+
 UCLASS(Blueprintable)
 class AMyPlayer : public ABaseCharacter
 {
@@ -36,8 +38,6 @@ public:
 
 	virtual void PlayHitReaction() override;
 
-	virtual void Attack() override;
-
 	void PlayResurrection();
 
 	virtual void SetDead() override;
@@ -48,8 +48,6 @@ public:
 	UFUNCTION()
 	virtual void OnGetDamage(AActor* DamageCauser, float Damage);
 
-	void Resurrection();
-
 	void EquipSword();
 
 	void UnEquipSword();
@@ -58,12 +56,12 @@ public:
 	float WeaponATK;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<class AGreatSword> GreatSwordClass;
+	TSubclassOf<AGreatSword> GreatSwordClass;
 
 	void AttachSword();
 
-	UPROPERTY(EditAnywhere)
-	class AGreatSword* EquippedGreatSword;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AGreatSword* EquippedGreatSword;
 
 	uint8 bIsEquipped : 1;
 
@@ -72,6 +70,9 @@ public:
 	uint8 bIsAttack : 1;
 
 	uint8 bIsCritical : 1;
+
+	UPROPERTY(BlueprintReadOnly)
+	uint8 bIsInteractioned : 1;
 
 	float DrawTimer;	//칼 빼는 시간을 위한 타이머
 
@@ -118,8 +119,18 @@ public:
 
 	void LevelUP();
 
+	float GetPlayerExpeditionLevel();
+
+	void ExpeditionLevelUP();
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
-	TSubclassOf<UGameplayEffect> GameplayEffectClass;
+	TSubclassOf<UGameplayEffect> InitEXPEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	TSubclassOf<UGameplayEffect> UpdateRequiredEXPEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	TSubclassOf<UGameplayEffect> UpdateExpeditionRequiredEXPEffectClass;
 
 private:
 	/** Top down camera */

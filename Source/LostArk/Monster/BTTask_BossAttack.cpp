@@ -4,7 +4,7 @@
 #include "BTTask_BossAttack.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "../Monster/Monster.h"
+#include "../Monster/BossMonster.h"
 #include "../Player/MyPlayer.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameplayAbilitySpecHandle.h"
@@ -36,21 +36,21 @@ EBTNodeResult::Type UBTTask_BossAttack::ExecuteTask(UBehaviorTreeComponent& Owne
 		return EBTNodeResult::Failed;
 	}
 
-	AMonster* Monster = Cast<AMonster>(AIController->GetPawn());
-	if (Monster == nullptr)
+	ABossMonster* BossMonster = Cast<ABossMonster>(AIController->GetPawn());
+	if (BossMonster == nullptr)
 	{
 		return EBTNodeResult::Failed;
 	}
 
-	Monster->Target = TargetActor;
+	BossMonster->Target = TargetActor;
 
-	float DistanceToTarget = FVector::Dist(Monster->GetActorLocation(), TargetActor->GetActorLocation());
+	float DistanceToTarget = FVector::Dist(BossMonster->GetActorLocation(), TargetActor->GetActorLocation());
 	if (DistanceToTarget <= SkillRange)
 	{
-		UAbilitySystemComponent* SourceASC = Monster->GetAbilitySystemComponent();
+		UAbilitySystemComponent* SourceASC = BossMonster->GetAbilitySystemComponent();
 		if (SourceASC)
 		{
-			SourceASC->TryActivateAbilityByClass(UGA_BossFire::StaticClass());
+			SourceASC->TryActivateAbilityByClass(BossMonster->FireAbilityClass);
 		}
 		return EBTNodeResult::InProgress;
 	}

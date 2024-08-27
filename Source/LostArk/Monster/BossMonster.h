@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> FireMontage;
 
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TSubclassOf<class UGameplayAbility> FireAbilityClass;
+
 	void PlayFire();
 
 	FORCEINLINE virtual class UAnimMontage* GetFireMontage() const { return FireMontage; }

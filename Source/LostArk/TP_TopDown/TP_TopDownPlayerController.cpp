@@ -191,7 +191,8 @@ void ATP_TopDownPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &ATP_TopDownPlayerController::OnTouchReleased);
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ATP_TopDownPlayerController::OnTouchReleased);
 
-		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::InteractionTriggered);
+		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Started, this, &ATP_TopDownPlayerController::InteractionStarted);
+		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Completed, this, &ATP_TopDownPlayerController::InteractionReleased);
 	}
 	else
 	{
@@ -201,14 +202,12 @@ void ATP_TopDownPlayerController::SetupInputComponent()
 
 void ATP_TopDownPlayerController::SetupGASInputComponent()
 {
-	AMyPlayer* MyPlayer = Cast<AMyPlayer>(GetPawn());
-	ALostArkPlayerState* PS = Cast<ALostArkPlayerState>(MyPlayer->GetPlayerState());
+	ALostArkPlayerState* PS = GetPlayerState<ALostArkPlayerState>();
 	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
 
 	if (IsValid(ASC) && IsValid(InputComponent))
 	{
 		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
-
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATP_TopDownPlayerController::GASInputPressed, 0);
 	}
 	
@@ -296,8 +295,6 @@ void ATP_TopDownPlayerController::OnSetDestinationTriggered()
 
 void ATP_TopDownPlayerController::OnSetDestinationReleased()
 {
-	APawn* ControlledPawn = GetPawn();
-	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
 	// If it was a short press
 	if (FollowTime <= ShortPressThreshold)
 	{
@@ -323,17 +320,18 @@ void ATP_TopDownPlayerController::OnTouchReleased()
 	OnSetDestinationReleased();
 }
 
-//void ATP_TopDownPlayerController::AttackTriggered()
-//{
-//	APawn* ControlledPawn = GetPawn();
-//	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
-//	if (MyPlayer)
-//	{
-//		MyPlayer->Attack();
-//	}
-//}
-
-void ATP_TopDownPlayerController::InteractionTriggered()
+void ATP_TopDownPlayerController::InteractionStarted()
 {
+	APawn* ControlledPawn = GetPawn();
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
 
+	MyPlayer->bIsInteractioned = true;
+}
+
+void ATP_TopDownPlayerController::InteractionReleased()
+{
+	APawn* ControlledPawn = GetPawn();
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
+
+	MyPlayer->bIsInteractioned = false;
 }

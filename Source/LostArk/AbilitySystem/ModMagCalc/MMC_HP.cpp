@@ -7,6 +7,6 @@
 float UMMC_HP::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
 {
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(Spec.GetContext().GetSourceObject());
-	const float PlayerLevel = MyPlayer->GetPlayerLevel();
+	float PlayerLevel = MyPlayer->GetPlayerLevel();
 	return 206 + (4.56 * (PlayerLevel - 1.0f));
 }

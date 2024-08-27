@@ -23,6 +23,10 @@
 #include "../AbilitySystem/LostArkAbilitySystemComponent.h"
 #include "../AbilitySystem/LostArkPlayerAttributeSet.h"
 #include "../Tag/LostArkGameplayTag.h"
+#include "../Widget/OverlayWidget.h"
+#include "../Widget/RevivalWidget.h"
+#include "../Widget/EXPBattleWidget.h"
+#include "../Widget/EXPExpeditionWidget.h"
 
 AMyPlayer::AMyPlayer() : ABaseCharacter()
 {
@@ -31,6 +35,8 @@ AMyPlayer::AMyPlayer() : ABaseCharacter()
 	bIsAttacking = false;
 
 	bIsCritical = false;
+
+	bIsInteractioned = false;
 
 	SetPlayerState(ECharacterState::Idle);
 
@@ -72,10 +78,8 @@ void AMyPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AttachSword();
+	AttachSword();	
 
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
-	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	if (USkeletalMeshComponent* MeshComp = GetMesh())
 	{
 		PlayerAnimInstance = Cast<UAnimInstance_Player>(MeshComp->GetAnimInstance());
@@ -99,42 +103,16 @@ void AMyPlayer::PlayDead()
 
 void AMyPlayer::PlayHitReaction()
 {
-	if (CurrentState == ECharacterState::Idle)
-	{
-		PlayAnimMontage(HitReactionMontage, 1.0f);
-	}
 	if (AnimInstance)
 	{
-		if ((CurrentState == ECharacterState::Battle || CurrentState == ECharacterState::Attacking || CurrentState == ECharacterState::Combat) && !AnimInstance->Montage_IsPlaying(AttackMontage))
+		if (CurrentState == ECharacterState::Idle && !AnimInstance->Montage_IsPlaying(EquipSwordMontage))
+		{
+			PlayAnimMontage(HitReactionMontage, 1.0f);
+		}
+		else if ((CurrentState == ECharacterState::Battle || CurrentState == ECharacterState::Attacking || CurrentState == ECharacterState::Combat) && !AnimInstance->Montage_IsPlaying(AttackMontage) && !AnimInstance->Montage_IsPlaying(EquipSwordMontage) && !AnimInstance->Montage_IsPlaying(UnEquipSwordMontage))
 		{
 			PlayAnimMontage(HitReactionBattleMontage, 1.0f);
 		}
-	}
-}
-
-void AMyPlayer::Attack()
-{
-	//애니메이션
-	if (bIsEquipped) //장착한 상태일때
-	{
-		if (bIsAttacking) // 공격중이면 return
-		{
-			return;
-		}
-		else if (CurrentState != ECharacterState::Skilling &&
-			CurrentState != ECharacterState::Stunned &&
-			CurrentState != ECharacterState::Dashing &&
-			CurrentState != ECharacterState::GetHitting &&
-			CurrentState != ECharacterState::Moving &&
-			CurrentState != ECharacterState::Idle)
-		{
-			TimeCount = 0;
-		}
-	}
-	else if (!bIsEquipped)
-	{
-		EquipSword();
-		return;
 	}
 }
 
@@ -150,10 +128,19 @@ void AMyPlayer::SetDead()
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
 	{
+		APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD());
+		if (PlayerHUD)
+		{
+			PlayerHUD->OverlayWidget->WBPRevival->SetVisibility(ESlateVisibility::Visible);
+		}
 		Tags.Remove(FName("Player"));
-		DisableInput(PlayerController);
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		if (AbilitySystemComponent)
+		{
+			AbilitySystemComponent->ClearAllAbilities();
+		}
 	}
 }
 
@@ -200,20 +187,6 @@ void AMyPlayer::OnGetDamage(AActor* DamageCauser, float Damage)
 				PlayHitReaction();
 			}
 		}
-	}
-}
-
-void AMyPlayer::Resurrection()
-{
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (PC)
-	{
-		PlayResurrection();
-		Tags.AddUnique(FName("Player"));
-		SetPlayerState(ECharacterState::Idle);
-		PC->EnableInput(PC);
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	}
 }
 
@@ -264,7 +237,7 @@ void AMyPlayer::OnTimer()
 {
 	++TimeCount;
 
-	if (TimeCount >= 8)
+	if (TimeCount >= 5)
 	{
 		UnEquipSword();
 		GetWorld()->GetTimerManager().ClearTimer(StepHandle);
@@ -279,13 +252,6 @@ void AMyPlayer::PossessedBy(AController* NewController)
 	// Init ability actor info for the Server
 	InitAbilityActorInfo();
 
-	check(AbilitySystemComponent);
-	check(GameplayEffectClass);
-	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
-	ContextHandle.AddSourceObject(this);
-	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffectClass, GetPlayerLevel(), ContextHandle);
-
-	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
 	const ULostArkPlayerAttributeSet* CurrentAttributeSet = AbilitySystemComponent->GetSet<ULostArkPlayerAttributeSet>();
 	if (CurrentAttributeSet)
 	{
@@ -308,7 +274,16 @@ void AMyPlayer::PossessedBy(AController* NewController)
 
 	APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
 	ATP_TopDownPlayerController* LostArkPlayerController = Cast<ATP_TopDownPlayerController>(PlayerController);
+
 	LostArkPlayerController->SetupGASInputComponent();
+
+	if (AbilitySystemComponent)
+	{
+		if (AbilitySystemComponent->HasMatchingGameplayTag(LOSTARKTAG_CHARACTER_ISDEAD))
+		{
+			AbilitySystemComponent->RemoveLooseGameplayTag(LOSTARKTAG_CHARACTER_ISDEAD);
+		}
+	}
 }
 
 void AMyPlayer::OnRep_PlayerState()
@@ -329,13 +304,33 @@ float AMyPlayer::GetPlayerLevel()
 void AMyPlayer::LevelUP()
 {
 	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
+	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	check(LostArkPlayerState);
 	LostArkPlayerState->LevelUP();
-	check(AbilitySystemComponent);
-	check(GameplayEffectClass);
-	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
-	ContextHandle.AddSourceObject(this);
-	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffectClass, GetPlayerLevel(), ContextHandle);
+	ApplyEffectToSelf(UpdateRequiredEXPEffectClass, GetPlayerLevel()+1);
+	InitializeDefaultAttributes();
+	PlayerHUD->OverlayWidget->WBPExpBattle->UpdateBattleLevel(GetPlayerLevel());
+	PlayerHUD->OverlayWidget->WBPExpExpedition->UpdateBattleLevel(GetPlayerLevel());
+}
+
+float AMyPlayer::GetPlayerExpeditionLevel()
+{
+	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
+	check(LostArkPlayerState);
+	return LostArkPlayerState->GetPlayerExpeditionLevel();
+}
+
+void AMyPlayer::ExpeditionLevelUP()
+{
+	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
+	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+	check(LostArkPlayerState);
+	LostArkPlayerState->ExpeditionLevelUP();
+	ApplyEffectToSelf(UpdateExpeditionRequiredEXPEffectClass, GetPlayerExpeditionLevel()+1);
+	PlayerHUD->OverlayWidget->WBPExpBattle->UpdateExpeditionLevel(GetPlayerExpeditionLevel());
+	PlayerHUD->OverlayWidget->WBPExpExpedition->UpdateExpeditionLevel(GetPlayerExpeditionLevel());
 }
 
 void AMyPlayer::InitAbilityActorInfo()
@@ -355,5 +350,7 @@ void AMyPlayer::InitAbilityActorInfo()
 		}
 	}
 
+	float EffectLevel = GetPlayerLevel();
+	ApplyEffectToSelf(InitEXPEffectClass, EffectLevel+1);
 	InitializeDefaultAttributes();
 }

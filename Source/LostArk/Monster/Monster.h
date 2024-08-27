@@ -52,6 +52,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TSubclassOf<class UGameplayAbility> AttackAbilityClass;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
 	UWidgetComponent* HeadMountHPBarWidget;
 

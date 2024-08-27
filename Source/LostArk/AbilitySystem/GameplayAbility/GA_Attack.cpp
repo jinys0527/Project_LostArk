@@ -27,6 +27,7 @@ void UGA_Attack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 		{
 			PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayEquip"), MyPlayer->GetEquipMontage(), 1.0f);
 			MyPlayer->bIsEquipped = true;
+			MyPlayer->TimeCount = 0;
 			GetWorld()->GetTimerManager().SetTimer(MyPlayer->StepHandle, MyPlayer, &AMyPlayer::OnTimer, 1.0f, true);
 			PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_Attack::OnCompleteCallback);
 			PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_Attack::OnInterruptedCallback);
@@ -47,6 +48,7 @@ void UGA_Attack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 
 	if(AMonster* Monster = Cast<AMonster>(BaseCharacter))
 	{
+		BaseCharacter->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 		PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), Monster->GetAttackMontage(), 1.0f);
 		PlayAttackTask->OnCompleted.AddDynamic(this, &UGA_Attack::OnCompleteCallback);
 		PlayAttackTask->OnInterrupted.AddDynamic(this, &UGA_Attack::OnInterruptedCallback);

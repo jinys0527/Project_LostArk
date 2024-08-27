@@ -90,6 +90,12 @@ public:
 	UTimerWidget* Timer;
 
 	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> ExpBattleClass;
+
+	UPROPERTY()
+	class UEXPBattleWidget* WBPExpBattle;
+
+	UPROPERTY(EditAnywhere, Category = "Widget")
 	TSubclassOf<UUserWidget> ExpExpeditionClass;
 
 	UPROPERTY()
@@ -106,6 +112,12 @@ public:
 
 	UPROPERTY()
 	UMinimapLogHillWidget* WBPMiniMapLogHill;
+
+	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> RevivalClass;
+
+	UPROPERTY()
+	class URevivalWidget* WBPRevival;
 
 protected:
 	virtual void BeginPlay() override;

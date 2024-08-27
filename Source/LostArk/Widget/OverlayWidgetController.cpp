@@ -31,7 +31,9 @@ void UOverlayWidgetController::BroadcastInitialValues()
 	OnCurrentManaPointChanged.Broadcast(LostArkPlayerAttributeSet->GetCurrentManaPoint());
 	OnMaxManaPointChanged.Broadcast(LostArkPlayerAttributeSet->GetMaxManaPoint());
 	OnEXPChanged.Broadcast(LostArkPlayerAttributeSet->GetEXP());
-	OnRequiredChanged.Broadcast(LostArkPlayerAttributeSet->GetRequiredEXP());
+	OnRequiredEXPChanged.Broadcast(LostArkPlayerAttributeSet->GetRequiredEXP());
+	OnExpeditionEXPChanged.Broadcast(LostArkPlayerAttributeSet->GetExpeditionEXP());
+	OnExpeditionRequiredEXPChanged.Broadcast(LostArkPlayerAttributeSet->GetExpeditionRequiredEXP());
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
@@ -75,6 +77,12 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 		LostArkPlayerAttributeSet->GetRequiredEXPAttribute()).AddUObject(this, &UOverlayWidgetController::RequiredEXPChanged);
 
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		LostArkPlayerAttributeSet->GetExpeditionEXPAttribute()).AddUObject(this, &UOverlayWidgetController::ExpeditionEXPChanged);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		LostArkPlayerAttributeSet->GetExpeditionRequiredEXPAttribute()).AddUObject(this, &UOverlayWidgetController::ExpeditionRequiredEXPChanged);
+
 }
 
 void UOverlayWidgetController::CurrentLifePointChanged(const FOnAttributeChangeData& Data) const
@@ -104,7 +112,17 @@ void UOverlayWidgetController::EXPChanged(const FOnAttributeChangeData& Data) co
 
 void UOverlayWidgetController::RequiredEXPChanged(const FOnAttributeChangeData& Data) const
 {
-	OnRequiredChanged.Broadcast(Data.NewValue);
+	OnRequiredEXPChanged.Broadcast(Data.NewValue);
+}
+
+void UOverlayWidgetController::ExpeditionEXPChanged(const FOnAttributeChangeData& Data) const
+{
+	OnExpeditionEXPChanged.Broadcast(Data.NewValue);
+}
+
+void UOverlayWidgetController::ExpeditionRequiredEXPChanged(const FOnAttributeChangeData& Data) const
+{
+	OnExpeditionRequiredEXPChanged.Broadcast(Data.NewValue);
 }
 
 void UOverlayWidgetController::MonsterCurrentLifePointChanged(const FOnAttributeChangeData& Data) const

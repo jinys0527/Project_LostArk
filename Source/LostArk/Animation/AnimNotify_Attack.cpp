@@ -12,7 +12,7 @@ void UAnimNotify_Attack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 
 	if (Player)
 	{
-		if (Player->Target.Num() == 0 && Player->CurrentState != ECharacterState::Combat)
+		if (Player->Target.Num() == 0 && Player->PrevState != ECharacterState::Combat)
 		{
 			Player->SetPlayerState(ECharacterState::Battle);
 		}

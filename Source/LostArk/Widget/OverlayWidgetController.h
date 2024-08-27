@@ -38,7 +38,13 @@ public:
 	FOnAttributeChangedSignature OnEXPChanged;
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
-	FOnAttributeChangedSignature OnRequiredChanged;
+	FOnAttributeChangedSignature OnRequiredEXPChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnAttributeChangedSignature OnExpeditionEXPChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnAttributeChangedSignature OnExpeditionRequiredEXPChanged;
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FOnAttributeChangedSignature OnMonsterCurrentLifePointChanged;
@@ -53,6 +59,8 @@ protected:
 	void MaxManaPointChanged(const FOnAttributeChangeData& Data) const;
 	void EXPChanged(const FOnAttributeChangeData& Data) const;
 	void RequiredEXPChanged(const FOnAttributeChangeData& Data) const;
+	void ExpeditionEXPChanged(const FOnAttributeChangeData& Data) const;
+	void ExpeditionRequiredEXPChanged(const FOnAttributeChangeData& Data) const;
 	void MonsterCurrentLifePointChanged(const FOnAttributeChangeData& Data) const;
 	void MonsterMaxLifePointChanged(const FOnAttributeChangeData& Data) const;
 };
