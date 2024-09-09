@@ -13,5 +13,6 @@ UCLASS()
 class LOSTARK_API UEnterWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
-	
+public:
+
 };

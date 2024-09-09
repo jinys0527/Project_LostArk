@@ -64,6 +64,8 @@ public:
 	UFUNCTION()
 	void HandleHUDNamedMonster(APlayerHUD* PlayerHUD, ANamedMonster* NamedMonster);
 
+	void UpdateHealth(AMonster* Monster);
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AMonster> MonsterClass;
 	UPROPERTY(EditAnywhere)

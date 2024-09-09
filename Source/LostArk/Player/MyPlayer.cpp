@@ -27,6 +27,11 @@
 #include "../Widget/RevivalWidget.h"
 #include "../Widget/EXPBattleWidget.h"
 #include "../Widget/EXPExpeditionWidget.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "Components/SceneComponent.h"
+
 
 AMyPlayer::AMyPlayer() : ABaseCharacter()
 {
@@ -217,6 +222,17 @@ void AMyPlayer::UnEquipSword()
 	}
 }
 
+void AMyPlayer::DestroyHUD()
+{
+	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+	if (PlayerHUD)
+	{
+		PlayerHUD->OverlayWidget->RemoveFromViewport();
+
+	}
+}
+
 void AMyPlayer::AttachSword()
 {
 	if (GreatSwordClass)
@@ -237,7 +253,7 @@ void AMyPlayer::OnTimer()
 {
 	++TimeCount;
 
-	if (TimeCount >= 5)
+	if (TimeCount >= 15)
 	{
 		UnEquipSword();
 		GetWorld()->GetTimerManager().ClearTimer(StepHandle);
@@ -308,6 +324,42 @@ void AMyPlayer::LevelUP()
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	check(LostArkPlayerState);
 	LostArkPlayerState->LevelUP();
+	//나이아가라
+
+	FVector Location = GetActorLocation() - FVector(0.f, 0.f, 80.f);
+	/*NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+		LevelUPNiagara,
+		GetMesh(),
+		FName("LevelUP"),
+		Location,
+		FRotator::ZeroRotator,
+		FVector(1.0f),
+		EAttachLocation::SnapToTarget,
+		true,
+		ENCPoolMethod::None,
+		true
+		);*/
+
+	NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		LevelUPNiagara,
+		Location,
+		FRotator::ZeroRotator,
+		FVector(1.0f)
+	);
+
+	//위젯
+	GetWorld()->GetTimerManager().SetTimer(
+		LevelUpTimerHandle,
+		[this]()
+		{
+			ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
+			APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+			PlayerHUD->SpawnLevelUPWidgetWithAnimation(GetActorLocation());
+		},
+		1.6f,
+		false);
+		
 	ApplyEffectToSelf(UpdateRequiredEXPEffectClass, GetPlayerLevel()+1);
 	InitializeDefaultAttributes();
 	PlayerHUD->OverlayWidget->WBPExpBattle->UpdateBattleLevel(GetPlayerLevel());
@@ -352,5 +404,19 @@ void AMyPlayer::InitAbilityActorInfo()
 
 	float EffectLevel = GetPlayerLevel();
 	ApplyEffectToSelf(InitEXPEffectClass, EffectLevel+1);
+	InitializeDefaultAttributes();
+}
+
+void AMyPlayer::InitAbility(UAttributeSet* NewAttributeSet)
+{
+	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
+	check(LostArkPlayerState);
+	LostArkPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(LostArkPlayerState, this);
+	Cast<ULostArkAbilitySystemComponent>(LostArkPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
+	AbilitySystemComponent = Cast<ULostArkAbilitySystemComponent>(LostArkPlayerState->GetAbilitySystemComponent());
+	AttributeSet = NewAttributeSet;
+
+	float EffectLevel = GetPlayerLevel();
+	ApplyEffectToSelf(InitEXPEffectClass, EffectLevel + 1);
 	InitializeDefaultAttributes();
 }

@@ -16,11 +16,18 @@ void AMonsterAIController::BeginPlay()
 
 		AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 
-		GetBlackboardComponent()->SetValueAsVector(TEXT("StartLocation"), GetPawn()->GetActorLocation());
+		UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
+		if (BlackboardComponent)
+		{
+			if (GetPawn())
+			{
+				BlackboardComponent->SetValueAsVector(TEXT("StartLocation"), GetPawn()->GetActorLocation());
+			}
+			
+			BlackboardComponent->SetValueAsVector(TEXT("PlayerLocation"), Player->GetActorLocation());
 
-		GetBlackboardComponent()->SetValueAsVector(TEXT("PlayerLocation"), Player->GetActorLocation());
-
-		GetBlackboardComponent()->SetValueAsBool(TEXT("AbilityEnd"), true);
+			BlackboardComponent->SetValueAsBool(TEXT("AbilityEnd"), true);
+		}
 	}
 	AMyPlayer* Player = Cast<AMyPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 }

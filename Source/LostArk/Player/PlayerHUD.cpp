@@ -20,8 +20,14 @@
 #include "../Widget/EXPBattleWidget.h"
 #include "../Widget/EXPExpeditionWidget.h"
 #include "../Widget/MinimapLogHillWidget.h"
+#include "../Widget/MinimapTrixionWidget.h"
 #include "../Widget/RevivalWidget.h"
 #include "../Player/LostArkPlayerState.h"
+#include "../Widget/EnterWidget.h"
+#include "../Widget/LevelUpWidget.h"
+#include "Blueprint/UserWidget.h"
+#include "TimerManager.h"
+#include "Animation/WidgetAnimation.h"
 
 
 APlayerHUD::APlayerHUD() : AHUD()
@@ -91,13 +97,25 @@ void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 		OverlayWidget->WBPExpExpedition->UpdateExpeditionLevel(LostArkPlayerState->GetPlayerExpeditionLevel());
 		OverlayWidget->WBPExpExpedition->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	if (OverlayWidget->WBPMiniMapLogHill)
+	if (OverlayWidget->WBPMiniMapLogHill && OverlayWidget->WBPMiniMapTrixion)
 	{
-		OverlayWidget->WBPMiniMapLogHill->SetVisibility(ESlateVisibility::Collapsed);
+		FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+		if (LevelName == "L_Trixion")
+		{
+			OverlayWidget->WBPMiniMapLogHill->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		else
+		{
+			OverlayWidget->WBPMiniMapTrixion->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 	if (OverlayWidget->WBPRevival)
 	{
-		OverlayWidget->WBPRevival->SetVisibility(ESlateVisibility::Collapsed);
+		OverlayWidget->WBPRevival->SetVisibility(ESlateVisibility::Hidden);
+	}
+	if (OverlayWidget->WBPEnter)
+	{
+		OverlayWidget->WBPEnter->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	Widget->AddToViewport();
 }
@@ -105,4 +123,41 @@ void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 void APlayerHUD::DrawHUD()
 {
 	Super::DrawHUD();
+}
+
+void APlayerHUD::SpawnLevelUPWidgetWithAnimation(FVector Location)
+{
+	if (LevelUPWidgetClass)
+	{
+		// 위젯을 생성
+		UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), LevelUPWidgetClass);
+		LevelUPWidget = Cast<ULevelUpWidget>(Widget);
+		if (LevelUPWidget)
+		{
+			// 위젯을 뷰포트에 추가
+			LevelUPWidget->AddToViewport();
+
+			// 애니메이션을 재생 (위젯 내에서 애니메이션을 찾아야 함)
+			UWidgetAnimation* Animation = LevelUPWidget->LevelUp; // 애니메이션 이름을 넣음
+			if (Animation)
+			{
+				// 애니메이션을 재생
+				Widget->PlayAnimation(Animation);
+
+				// 애니메이션이 끝난 후 위젯을 삭제하기 위한 타이머 설정
+				float AnimationLength = Animation->GetEndTime();
+				FTimerHandle TimerHandle;
+				GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &APlayerHUD::RemoveWidget, Widget), AnimationLength, false);
+			}
+		}
+	}
+}
+
+void APlayerHUD::RemoveWidget(UUserWidget* Widget)
+{
+	if (Widget)
+	{
+		Widget->RemoveFromParent();
+		Widget->Destruct();
+	}
 }

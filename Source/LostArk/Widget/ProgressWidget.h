@@ -8,6 +8,8 @@
 #include "../Monster/MonsterType.h"
 #include "ProgressWidget.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnProgressBarChanged, float, NewProgress);
+
 class UProgressBar;
 class UButton;
 class UImage;
@@ -25,6 +27,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UProgressBar* ChaosDungeonProgressBar;
+
+	UPROPERTY()
+	FOnProgressBarChanged OnProgressBarChanged;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* ExitButton;
@@ -47,5 +52,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UImage* Line;
 
+	void BindToMonster(class AMonster* Monster);
+	
+	UFUNCTION()
 	void UpdateProgress(EMonsterType MonsterType);
 };

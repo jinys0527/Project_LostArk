@@ -174,13 +174,13 @@ void ULostArkPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffect
 		float OverEXP = CurrentEXP - CurrentRequiredEXP;
 		AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
 		AMyPlayer* MyPlayer = Cast<AMyPlayer>(TargetActor);
-
 		while (OverEXP >= 0)
 		{
 			MyPlayer->LevelUP();
 			SetEXP(OverEXP);
 			CurrentRequiredEXP = GetRequiredEXP();
 			OverEXP = GetEXP() - CurrentRequiredEXP;
+			
 		}	
 	}
 	if (Data.EvaluatedData.Attribute == GetExpeditionEXPAttribute())

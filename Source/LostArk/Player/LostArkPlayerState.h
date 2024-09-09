@@ -27,6 +27,10 @@ public:
 
 	FORCEINLINE float GetPlayerExpeditionLevel() { return ExpeditionLevel; }
 
+	void SetPlayerLevel(float NewLevel);
+
+	void SetPlayerExpeditionLevel(float NewExpeditionLevel);
+
 	FORCEINLINE void LevelUP() { Level++; }
 
 	FORCEINLINE void ExpeditionLevelUP() { ExpeditionLevel++; }

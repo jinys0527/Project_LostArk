@@ -32,13 +32,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* TimeInfo;
 
-	void UpdateTime();
+	UFUNCTION(BlueprintCallable)
+	void UpdateTime(int Time);
 
-	void InitTime();
-
-	void StartTimer();
-
-	uint8 bIsEnd : 1;
-
-	FTimerHandle StageTimer;
+	void InitTime(int Time);
 };

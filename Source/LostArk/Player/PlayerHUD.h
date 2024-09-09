@@ -23,6 +23,7 @@ class UOverlayWidget;
 class UEXPExpeditionWidget;
 class UMinimapTrixionWidget;
 class UMinimapLogHillWidget;
+class ULevelUpWidget;
 struct FWidgetControllerParams;
 /**
  * 
@@ -35,7 +36,7 @@ class LOSTARK_API APlayerHUD : public AHUD
 public:
 	APlayerHUD();
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UOverlayWidget> OverlayWidget;
 
 	UOverlayWidgetController* GetOverlayWidgetController(const FWidgetControllerParams& WCParams);
@@ -43,6 +44,17 @@ public:
 	void InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
 
 	virtual void DrawHUD() override;
+
+	void SpawnLevelUPWidgetWithAnimation(FVector Location);
+
+	void RemoveWidget(UUserWidget* Widget);
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = LevelUP)
+	ULevelUpWidget* LevelUPWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = LevelUP)
+	TSubclassOf<ULevelUpWidget> LevelUPWidgetClass;
 
 	UPROPERTY()
 	UHeadMountHPWidget* HeadMountHP;

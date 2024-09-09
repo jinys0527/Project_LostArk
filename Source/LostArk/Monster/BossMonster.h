@@ -6,7 +6,6 @@
 #include "Monster.h"
 #include "BossMonster.generated.h"
 
-
 /**
  * 
  */
@@ -20,6 +19,8 @@ public:
 	TSubclassOf<ABossMonster> BossClass;
 
 	static int32 BossWidgetCount;
+
+	virtual void SetDead() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> FireMontage;

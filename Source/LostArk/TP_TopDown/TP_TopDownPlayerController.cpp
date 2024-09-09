@@ -20,7 +20,11 @@
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/LocalPlayer.h"
+#include "Components/TextBlock.h"
+#include "Components/ProgressBar.h"
+#include "../AbilitySystem/LostArkMonsterAttributeSet.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -87,6 +91,7 @@ void ATP_TopDownPlayerController::CheckMouseOver()
 						if (NamedMonster)
 						{
 							HandleHUDNamedMonster(PlayerHUD, NamedMonster);
+							UpdateHealth(NamedMonster);
 						}
 					}
 
@@ -96,6 +101,7 @@ void ATP_TopDownPlayerController::CheckMouseOver()
 						if (Monster)
 						{
 							HandleHUDCommonMonster(PlayerHUD, Monster);
+							UpdateHealth(Monster);
 						}
 					}
 				}
@@ -161,6 +167,61 @@ void ATP_TopDownPlayerController::HandleHUDNamedMonster(APlayerHUD* PlayerHUD, A
 						PlayerHUD->OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Visible);
 					}
 				}
+			}
+		}
+	}
+}
+
+void ATP_TopDownPlayerController::UpdateHealth(AMonster* Monster)
+{
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(GetHUD());
+	if (PlayerHUD)
+	{
+		ULostArkMonsterAttributeSet* MonsterAttributeSet = Cast<ULostArkMonsterAttributeSet>(Monster->GetAttributeSet());
+		if (PlayerHUD->OverlayWidget)
+		{
+			switch (Monster->MonsterType)
+			{
+			case EMonsterType::Named:
+				if (PlayerHUD->OverlayWidget->WBPHPNamed)
+				{
+					float CurrentLifePoint = PlayerHUD->OverlayWidget->WBPHPNamed->GetCurrentHP();
+					float MaxLifePoint = PlayerHUD->OverlayWidget->WBPHPNamed->GetMaxHP();
+					float CurrentMonsterLifePoint = MonsterAttributeSet->GetMonsterCurrentLifePoint();
+					float CurrentMonsterMaxLifePoint = MonsterAttributeSet->GetMonsterMaxLifePoint();
+
+					if (CurrentLifePoint != CurrentMonsterLifePoint)
+					{
+						PlayerHUD->OverlayWidget->WBPHPNamed->SetCurrentHP(round(CurrentMonsterLifePoint));
+						PlayerHUD->OverlayWidget->WBPHPNamed->SetHPBarPercent(CurrentMonsterLifePoint, CurrentMonsterMaxLifePoint);
+					}
+					if (MaxLifePoint != CurrentMonsterMaxLifePoint)
+					{
+						PlayerHUD->OverlayWidget->WBPHPNamed->SetMaxHP(round(CurrentMonsterMaxLifePoint));
+						PlayerHUD->OverlayWidget->WBPHPNamed->SetHPBarPercent(CurrentMonsterLifePoint, CurrentMonsterMaxLifePoint);
+					}
+				}
+				break;
+			case EMonsterType::Common:
+				if (PlayerHUD->OverlayWidget->WBPHPCommon)
+				{
+					float CurrentLifePoint = PlayerHUD->OverlayWidget->WBPHPCommon->GetCurrentHP();
+					float MaxLifePoint = PlayerHUD->OverlayWidget->WBPHPCommon->GetMaxHP();
+					float CurrentMonsterLifePoint = MonsterAttributeSet->GetMonsterCurrentLifePoint();
+					float CurrentMonsterMaxLifePoint = MonsterAttributeSet->GetMonsterMaxLifePoint();
+
+					if (CurrentLifePoint != CurrentMonsterLifePoint)
+					{
+						PlayerHUD->OverlayWidget->WBPHPCommon->SetCurrentHP(round(CurrentMonsterLifePoint));
+						PlayerHUD->OverlayWidget->WBPHPCommon->SetHPBarPercent(CurrentMonsterLifePoint, CurrentMonsterMaxLifePoint);
+					}
+					if (MaxLifePoint != CurrentMonsterMaxLifePoint)
+					{
+						PlayerHUD->OverlayWidget->WBPHPCommon->SetMaxHP(round(CurrentMonsterMaxLifePoint));
+						PlayerHUD->OverlayWidget->WBPHPCommon->SetHPBarPercent(CurrentMonsterLifePoint, CurrentMonsterMaxLifePoint);
+					}
+				}
+				break;
 			}
 		}
 	}

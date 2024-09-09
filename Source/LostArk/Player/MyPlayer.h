@@ -9,6 +9,11 @@
 
 
 class AGreatSword;
+class AMonster;
+class UAttributeSet;
+class UNiagaraSystem;
+class UNiagaraComponent;
+
 
 UCLASS(Blueprintable)
 class AMyPlayer : public ABaseCharacter
@@ -51,6 +56,9 @@ public:
 	void EquipSword();
 
 	void UnEquipSword();
+
+	UFUNCTION(BlueprintCallable)
+	void DestroyHUD();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float WeaponATK;
@@ -107,7 +115,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TMap<int32, TSubclassOf<class UGameplayAbility>> StartInputAbilities;
 
-	TSet<AActor*> Target;
+	TSet<AMonster*> Target;
 
 	virtual void PossessedBy(AController* NewController) override;
 
@@ -132,6 +140,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
 	TSubclassOf<UGameplayEffect> UpdateExpeditionRequiredEXPEffectClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = LevelUP)
+	UNiagaraSystem* LevelUPNiagara;
+
+	FTimerHandle LevelUpTimerHandle;
+
+	UNiagaraComponent* NiagaraComp;
+
+	virtual void InitAbilityActorInfo() override;
+
+	virtual void InitAbility(UAttributeSet* AttributeSet);
+
 private:
 	/** Top down camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -140,6 +159,4 @@ private:
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
-
-	virtual void InitAbilityActorInfo() override;
 };

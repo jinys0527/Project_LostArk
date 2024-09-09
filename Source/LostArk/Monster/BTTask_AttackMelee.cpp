@@ -49,15 +49,15 @@ EBTNodeResult::Type UBTTask_AttackMelee::ExecuteTask(UBehaviorTreeComponent& Own
 
 	if (Monster->MonsterType == EMonsterType::Common)
 	{
-		AttackRange = 95.0f;
+		AttackRange = 110.0f;
 	}
 	else if (Monster->MonsterType == EMonsterType::Named)
 	{
-		AttackRange = 100.0f;
+		AttackRange = 120.0f;
 	}
 	else if (Monster->MonsterType == EMonsterType::Boss)
 	{
-		AttackRange = 115.0f;
+		AttackRange = 310.0f;
 	}
 
 	float DistanceToTarget = FVector::Dist(Monster->GetActorLocation(), TargetActor->GetActorLocation());

@@ -11,6 +11,7 @@
 #include "../Player/PlayerHUD.h"
 #include "../Widget/HeadMountHPWidget.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
@@ -57,6 +58,9 @@ AMonster::AMonster() : ABaseCharacter()
 
 	bIsHitted = false;
 
+	AIControllerClass = MonsterAIControllerClass;
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
 	AbilitySystemComponent = CreateDefaultSubobject<ULostArkAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
@@ -92,9 +96,10 @@ void AMonster::PossessedBy(AController* NewController)
 	InitAbilityActorInfo();
 
 	ULostArkMonsterAttributeSet* CurrentAttributeSet = Cast<ULostArkMonsterAttributeSet>(GetAttributeSet());
-	CurrentAttributeSet->bIsSet = true;
+	
 	if (CurrentAttributeSet)
 	{
+		CurrentAttributeSet->bIsSet = true;
 		CurrentAttributeSet->OnOutOfHealth.AddDynamic(this, &ThisClass::OnOutOfHealth);
 		CurrentAttributeSet->OnGetDamage.AddDynamic(this, &ThisClass::OnGetDamage);
 	}
@@ -173,30 +178,46 @@ void AMonster::OnGetDamage(AActor* DamageCauser, float Damage)
 void AMonster::SetDead()
 {
 	Super::SetDead();
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(Target);
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(MyPlayer->GetController());
-	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
-	if (MonsterType == EMonsterType::Common)
+	if (MyPlayer)
 	{
-		PlayerHUD->OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Collapsed);
+		ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(MyPlayer->GetController());
+		if (PC)
+		{
+			APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+			if (PlayerHUD && PlayerHUD->OverlayWidget)
+			{
+				if (MonsterType == EMonsterType::Common)
+				{
+					PlayerHUD->OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Collapsed);
+				}
+				else if (MonsterType == EMonsterType::Named)
+				{
+					PlayerHUD->OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Collapsed);
+				}
+				else if (MonsterType == EMonsterType::Boss)
+				{
+					PlayerHUD->OverlayWidget->WBPHPBoss->SetVisibility(ESlateVisibility::Collapsed);
+				}
+			}
+		}
+
+		UAbilitySystemComponent* PlayerASC = MyPlayer->GetAbilitySystemComponent();
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddInstigator(this, GetController());
+		FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, EffectContext);
+		if (EffectSpecHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), PlayerASC);
+		}
+
 	}
-	else if (MonsterType == EMonsterType::Named)
-	{
-		PlayerHUD->OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	else if (MonsterType == EMonsterType::Boss)
-	{
-		PlayerHUD->OverlayWidget->WBPHPBoss->SetVisibility(ESlateVisibility::Collapsed);
-	}
+
 	
-	UAbilitySystemComponent* PlayerASC = MyPlayer->GetAbilitySystemComponent();
-	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-	EffectContext.AddInstigator(this, GetController());
-	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, EffectContext);
-	if (EffectSpecHandle.IsValid())
-	{
-		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), PlayerASC);
-	}
 
 	FTimerHandle DeadTimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda(
@@ -205,6 +226,18 @@ void AMonster::SetDead()
 			Destroy();
 		}
 	), DeadEventDelayTime, false);
+
+	AGameStateBase* CurrentState = GetWorld()->GetGameState();
+	if (CurrentState)
+	{
+		AChaosDungeonGameState* ChaosDungeonState = Cast<AChaosDungeonGameState>(CurrentState);
+		--ChaosDungeonState->CurrentMonsterCount;
+	}
+
+	isAlive = false;
+	OnMonsterDead.Broadcast();
+	OnMonsterDeadWithType.Broadcast(MonsterType);
+	OnMonsterDeadWithMonster.Broadcast(this);
 }
 
 void AMonster::BeginPlay()
@@ -218,19 +251,6 @@ void AMonster::BeginPlay()
 
 	if (const ULostArkMonsterAttributeSet* MonsterAttributeSet = Cast< ULostArkMonsterAttributeSet>(AttributeSet))
 	{
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MonsterAttributeSet->GetMonsterCurrentLifePointAttribute()).AddLambda(
-			[this](const FOnAttributeChangeData& Data)
-			{
-				OnMonsterCurrentLifePointChanged.Broadcast(Data.NewValue);
-			}
-		);
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MonsterAttributeSet->GetMonsterMaxLifePointAttribute()).AddLambda(
-			[this](const FOnAttributeChangeData& Data)
-			{
-				OnMonsterMaxLifePointChanged.Broadcast(Data.NewValue);
-			}
-		);
-
 		OnMonsterCurrentLifePointChanged.Broadcast(MonsterAttributeSet->GetMonsterCurrentLifePoint());
 		OnMonsterMaxLifePointChanged.Broadcast(MonsterAttributeSet->GetMonsterMaxLifePoint());
 	}
@@ -241,5 +261,31 @@ void AMonster::InitAbilityActorInfo()
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<ULostArkAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 
+	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+
+	UOverlayWidgetController* OverlayWidgetController = Cast<UOverlayWidgetController>(PlayerHUD->OverlayWidget->WidgetController);
+	OverlayWidgetController->BindToMonsterEvents(this);
 	InitializeDefaultAttributes();
+	BroadcastLifePoint();
+}
+
+void AMonster::BroadcastLifePoint()
+{
+	if (AttributeSet)
+	{
+		ULostArkMonsterAttributeSet* MonsterAttributeSet = Cast<ULostArkMonsterAttributeSet>(AttributeSet);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MonsterAttributeSet->GetMonsterCurrentLifePointAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			OnMonsterCurrentLifePointChanged.Broadcast(Data.NewValue);
+		}
+	);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MonsterAttributeSet->GetMonsterMaxLifePointAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			OnMonsterMaxLifePointChanged.Broadcast(Data.NewValue);
+		}
+	);
+	}
 }

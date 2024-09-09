@@ -5,6 +5,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
+#include "../Monster/Monster.h"
 
 void UProgressWidget::NativeConstruct()
 {
@@ -21,6 +22,14 @@ void UProgressWidget::NativeConstruct()
 	}
 }
 
+void UProgressWidget::BindToMonster(AMonster* Monster)
+{
+	if (Monster)
+	{
+		Monster->OnMonsterDeadWithType.AddDynamic(this, &UProgressWidget::UpdateProgress);
+	}
+}
+
 void UProgressWidget::UpdateProgress(EMonsterType MonsterType)
 {
 	if (ChaosDungeonProgressBar)
@@ -29,7 +38,7 @@ void UProgressWidget::UpdateProgress(EMonsterType MonsterType)
 		switch (MonsterType)
 		{
 		case EMonsterType::Common:
-			CurrentPercent += 0.025;
+			CurrentPercent += 0.018;
 			break;
 		case EMonsterType::Named:
 			CurrentPercent += 0.05;
@@ -41,6 +50,7 @@ void UProgressWidget::UpdateProgress(EMonsterType MonsterType)
 		int32 iCurrentPercent = round(CurrentPercent * 100);
 
 		ChaosDungeonProgressBar->SetPercent(CurrentPercent);
+		OnProgressBarChanged.Broadcast(CurrentPercent);
 		ProgressValue->SetText(FText::FromString(FString::FromInt(iCurrentPercent)));
 	}
 }

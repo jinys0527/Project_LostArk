@@ -4,28 +4,55 @@
 #include "MinimapTrixionWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "../Widget/MinimapPlayerWidget.h"
+#include "../Widget/MinimapPortalWidget.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 
-void UMinimapTrixionWidget::UpdateMiniMap(UMinimapPlayerWidget* Player)
+void UMinimapTrixionWidget::UpdatePlayer(UMinimapPlayerWidget* PlayerWidget)
 {
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	FVector PlayerLocation = PlayerController->GetPawn()->GetActorLocation();
 
 	FVector2D PlayerMiniMapPosition = ConvertWorldToMiniMap(PlayerLocation);
 
-	if (Player)
+	if (PlayerWidget)
 	{
-		if (!Map->HasChild(Player))
+		if (!Map->HasChild(PlayerWidget))
 		{
-			Map->AddChild(Player);
+			Map->AddChild(PlayerWidget);
 		}
 
-		UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(Player->Slot);
+		UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(PlayerWidget->Slot);
 		if (CanvasPanelSlot)
 		{
 			CanvasPanelSlot->SetPosition(PlayerMiniMapPosition);
+		}
+	}
+}
+
+void UMinimapTrixionWidget::UpdatePortal(UMinimapPortalWidget* PortalWidget)
+{
+	AActor* Portal = UGameplayStatics::GetActorOfClass(GetWorld(), Portalclass);
+
+	if (Portal)
+	{
+		FVector PortalLocation = Portal->GetActorLocation();
+		FVector2D PortalMiniMapPosition = ConvertWorldToMiniMap(PortalLocation);
+
+		if (!Map->HasChild(PortalWidget))
+		{
+			Map->AddChild(PortalWidget);
+
+			UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(PortalWidget->Slot);
+			if (CanvasPanelSlot)
+			{
+				CanvasPanelSlot->SetPosition(PortalMiniMapPosition);
+			}
+		}
+		else
+		{
+			return;
 		}
 	}
 }

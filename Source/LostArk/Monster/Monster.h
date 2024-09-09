@@ -18,6 +18,10 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 class UAnimInstance_Monster;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMonsterDead);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMonsterDeadWithType, EMonsterType, NewMonsterType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMonsterDeadWithMonster, AMonster*, Monster);
+
 /**
  * 
  */
@@ -47,6 +51,12 @@ public:
 
 	virtual void SetDead();
 
+	FOnMonsterDead OnMonsterDead;
+
+	FOnMonsterDeadWithType OnMonsterDeadWithType;
+
+	FOnMonsterDeadWithMonster OnMonsterDeadWithMonster;
+
 	float DeadEventDelayTime = 3.0f;
 
 	UPROPERTY(EditAnywhere, Category = GAS)
@@ -68,10 +78,17 @@ public:
 
 	EMonsterType MonsterType;
 
+	UUserWidget* MiniMapWidget;
+
 	virtual void InitAbilityActorInfo() override;
+
+	virtual void BroadcastLifePoint();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayEffect")
 	TSubclassOf<class UGameplayEffect> EffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller")
+	TSubclassOf<class AController> MonsterAIControllerClass;
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FOnAttributeChangedSignature OnMonsterCurrentLifePointChanged;

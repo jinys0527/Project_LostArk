@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "../Monster/MonsterType.h"
-#include "GameFramework/Character.h"
 #include "MonsterSpawner.generated.h"
 
+class AMonster;
+class ANamedMonster;
+
 UCLASS()
-class LOSTARK_API AMonsterSpawner : public ACharacter
+class LOSTARK_API AMonsterSpawner : public AActor
 {
 	GENERATED_BODY()
 
@@ -21,12 +23,6 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	float Radius;
 
 	float Angle;
@@ -37,11 +33,15 @@ public:
 
 	float MonsterSizeRadius;
 
-	float CommonMaxRadius = 80.0f;
+	float CommonMaxRadius = 300.0f;
 
-	float NamedMaxRadius = 60.0f;
+	float NamedMaxRadius = 200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AMonster> MonsterClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<ANamedMonster> NamedMonsterClass;
 
 	void SpawnMonster(EMonsterType MonsterType);
-
-	bool CheckValidLocation(FVector NewSpawnLocation, float SpawnRadius);
 };

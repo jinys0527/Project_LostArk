@@ -22,6 +22,7 @@ class UStatusBarWidget;
 class UMinimapTrixionWidget;
 class UMinimapLogHillWidget;
 class URevivalWidget;
+class UEnterWidget;
 
 /**
  * 
@@ -115,4 +116,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	URevivalWidget* WBPRevival;
+
+	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> Enterclass;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UEnterWidget* WBPEnter;
 };

@@ -23,6 +23,11 @@ ABossMonster::ABossMonster() : AMonster()
 	MonsterType = EMonsterType::Boss;
 }
 
+void ABossMonster::SetDead()
+{
+	Super::SetDead();
+}
+
 void ABossMonster::PlayFire()
 {
 	PlayAnimMontage(FireMontage, 1.0f);

@@ -26,9 +26,8 @@ void UAnimNotifyState_GS_Attacking::NotifyEnd(USkeletalMeshComponent* MeshComp, 
 	{
 		if (Player->Target.Num() != 0)
 		{
-			for (AActor* Actor : Player->Target)
+			for (AMonster* Monster : Player->Target)
 			{
-				AMonster* Monster = Cast<AMonster>(Actor);
 				if (Monster)
 				{
 					Monster->bIsHitted = false;

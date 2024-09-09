@@ -35,6 +35,16 @@ UAbilitySystemComponent* ALostArkPlayerState::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
+void ALostArkPlayerState::SetPlayerLevel(float NewLevel)
+{
+	Level = NewLevel;
+}
+
+void ALostArkPlayerState::SetPlayerExpeditionLevel(float NewExpeditionLevel)
+{
+	ExpeditionLevel = NewExpeditionLevel;
+}
+
 void ALostArkPlayerState::OnRep_Level()
 {
 	//¿Ã∆—∆Æ + πÆ±∏

@@ -35,8 +35,7 @@ void UAnimNotifyState_Fire::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	FVector EndLocation = StartLocation + (MeshComp->GetSocketTransform("FireAttack").GetRotation().GetForwardVector() * 500.f);
 	FRotator BoxRotation = FRotator::ZeroRotator;
 	FHitResult HitResult;
-	ETraceTypeQuery TraceChannel = UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1);
-	//CollisionChannel::ECC_WorldDynamic); //충돌처리할 거 지정
+	ETraceTypeQuery TraceChannel = UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1); //충돌처리할 거 지정
 	TArray<AActor*> IgnoreActor;
 	IgnoreActor.Add(Boss);
 

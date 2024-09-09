@@ -14,4 +14,7 @@ class LOSTARK_API UExitWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
 	
+public:
+	UFUNCTION(BlueprintCallable)
+	void Exit();
 };

@@ -16,27 +16,30 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 	{ 
 		if (UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent())
 		{
-			for (AActor* Target : Player->Target)
+			for (AMonster* Target : Player->Target)
 			{
-				AMonster* Monster = Cast<AMonster>(Target);
-				if (Monster)
+				if (Target)
 				{
-					if (Monster->bIsHitted)
+					if (Target->bIsHitted)
 					{
 						continue;  
 					}
 
-					UAbilitySystemComponent* TargetASC = Monster->GetAbilitySystemComponent();
-					if (TargetASC)
+					if (IsValid(Target) && IsValid(Target->GetAbilitySystemComponent()))
 					{
-						FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
-						EffectContext.AddInstigator(Player, Player->GetController());
-						FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(EffectClass, 1.0f, EffectContext);
-						if (EffectSpecHandle.IsValid())	
+						UAbilitySystemComponent* TargetASC = Target->GetAbilitySystemComponent();
+						if (TargetASC)
 						{
-							ASC->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), TargetASC);
+							FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+							EffectContext.AddInstigator(Player, Player->GetController());
+							FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(EffectClass, 1.0f, EffectContext);
+							if (EffectSpecHandle.IsValid())
+							{
+								ASC->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), TargetASC);
+							}
 						}
 					}
+					Target->BroadcastLifePoint();
 				}
 			}
 		}

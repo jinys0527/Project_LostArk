@@ -47,7 +47,5 @@ float UMMC_AttackDamage::CalculateBaseMagnitude_Implementation(const FGameplayEf
 	MonsterDEF = FMath::Max(MonsterDEF, 0.0f);
 	MonsterDEF = 1.f - (MonsterDEF / (MonsterDEF + 6500.f) * 100.f);
 
-	UE_LOG(LogTemp, Warning, TEXT("%f"), RandomDamage * MonsterDEF);
-
 	return RandomDamage * MonsterDEF;
 }

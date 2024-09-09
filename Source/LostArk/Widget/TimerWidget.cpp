@@ -4,67 +4,30 @@
 #include "TimerWidget.h"
 #include "Components/TextBlock.h"
 
+
 void UTimerWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	if (Min)
-	{
-		Min->SetText(FText::FromString("05"));
-	}
-
-	if (Sec)
-	{
-		Sec->SetText(FText::FromString("00"));
-	}
 }
 
-void UTimerWidget::UpdateTime()
+void UTimerWidget::UpdateTime(int Time)
 {
-	FString CurrentSecStr = Sec->GetText().ToString();
-	FString CurrentMinStr = Min->GetText().ToString();
+	int Minute = Time / 60;
+	int Second = Time % 60;
 
-	if (CurrentSecStr == "00" && CurrentMinStr == "00")
+	if (Minute == 0 && Second == 0)
 	{
-		bIsEnd = true;
 		return;
 	}
 
-	else if (CurrentSecStr == "00" && CurrentMinStr != "00")
-	{
-		int32 CurrentMin = FCString::Atoi(*CurrentMinStr);
-		--CurrentMin;
-
-		FString FormattedMin = FString::Printf(TEXT("%02d"), CurrentMin);
-
-		Min->SetText(FText::FromString(FormattedMin));
-		Sec->SetText(FText::FromString(FString::FromInt(59)));
-	}
-	else
-	{
-		int32 CurrentSec = FCString::Atoi(*CurrentSecStr);
-		--CurrentSec;
-
-		FString FommattedSec = FString::Printf(TEXT("%02d"), CurrentSec);
-
-		Sec->SetText(FText::FromString(FommattedSec));
-	}
-
-	bIsEnd = false;
+	Min->SetText(FText::FromString(FString::Printf(TEXT("%02d"), Minute)));
+	Sec->SetText(FText::FromString(FString::Printf(TEXT("%02d"), Second)));
 }
 
-void UTimerWidget::InitTime()
+void UTimerWidget::InitTime(int Time)
 {
-	Min->SetText(FText::FromString("05"));
-	Sec->SetText(FText::FromString("00"));
-}
-
-void UTimerWidget::StartTimer()
-{
-	if (bIsEnd)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(StageTimer);
-		return;
-	}
-	GetWorld()->GetTimerManager().SetTimer(StageTimer, this, &UTimerWidget::UpdateTime, 1.0f, true);
+	int Minute = Time / 60;
+	int Second = Time % 60;
+	Min->SetText(FText::FromString(FString::Printf(TEXT("%02d"), Minute)));
+	Sec->SetText(FText::FromString(FString::Printf(TEXT("%02d"), Second)));
 }

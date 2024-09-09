@@ -6,13 +6,20 @@
 #include "../Monster/Monster.h"
 #include "../Monster/NamedMonster.h"
 #include "../Monster/BossMonster.h"
+#include "../Player/PlayerHUD.h"
+#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../Widget/OverlayWidget.h"
+#include "../Widget/MinimapLogHillWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "../Monster/MonsterAIController.h"
+#include "../AbilitySystem/LostArkAbilitySystemComponent.h"
+#include "../AbilitySystem/LostArkMonsterAttributeSet.h"
+#include "../Widget/OverlayWidgetController.h"
+#include "../Widget/ProgressWidget.h"
 
 // Sets default values
 AMonsterSpawner::AMonsterSpawner()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	Center = GetActorLocation();
 }
 
@@ -20,20 +27,6 @@ AMonsterSpawner::AMonsterSpawner()
 void AMonsterSpawner::BeginPlay()
 {
 	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void AMonsterSpawner::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-// Called to bind functionality to input
-void AMonsterSpawner::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
 
@@ -47,19 +40,49 @@ void AMonsterSpawner::SpawnMonster(EMonsterType MonsterType)
 	{
 		MaxRadius = NamedMaxRadius;
 	}
-	Radius = FMath::FRandRange(0.0f, MaxRadius);
-	Angle = FMath::FRandRange(0.0f, 360.0f);
+	int RadiusRange = FMath::RandRange(1, 2);
+	int AngleRange = FMath::RandRange(1, 4);
 
-	float SpawnX = Center.X + FMath::Cos(FMath::DegreesToRadians(Angle)) * Radius;
-	float SpawnY = Center.Y + FMath::Sin(FMath::DegreesToRadians(Angle)) * Radius;
-	float SpawnZ = Center.Z;
+	switch (RadiusRange)
+	{
+	case 1:
+		Radius = FMath::FRandRange(MaxRadius / 3 + 1, MaxRadius * 2 / 3);
+		break;
+
+	case 2:
+		Radius = FMath::FRandRange(2 * MaxRadius / 3 + 1, MaxRadius);
+		break;
+	}
+	
+	switch (AngleRange)
+	{
+	case 1:
+		Angle = FMath::FRandRange(0.0f, 90.0f);
+		break;
+	case 2:
+		Angle = FMath::FRandRange(91.0f, 180.0f);
+		break;
+	case 3:
+		Angle = FMath::FRandRange(181.0f, 270.0f);
+		break;
+	case 4:
+		Angle = FMath::FRandRange(271.0f, 360.0f);
+		break;
+	}
+
+	float SpawnX = Center.X + (FMath::Cos(FMath::DegreesToRadians(Angle)) * Radius);
+	float SpawnY = Center.Y + (FMath::Sin(FMath::DegreesToRadians(Angle)) * Radius);
+	float SpawnZ = 102.f;
 
 	FVector SpawnLocation(SpawnX, SpawnY, SpawnZ);
 
 	FRotator SpawnRotation = FRotator::ZeroRotator;
 
 	UWorld* World = GetWorld();
-	
+
+	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(World, 0));
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+
 	if (World)
 	{
 		AGameStateBase* CurrentState = World->GetGameState();
@@ -69,34 +92,31 @@ void AMonsterSpawner::SpawnMonster(EMonsterType MonsterType)
 
 			switch (MonsterType)
 			{
-			case EMonsterType::Boss:
-				MonsterSizeRadius = 62.0f;
-				if (CheckValidLocation(SpawnLocation, MonsterSizeRadius))
-				{
-					World->SpawnActor<ABossMonster>(ABossMonster::StaticClass(), Center, SpawnRotation);
-					++ChaosDungeonState->CurrentMonsterCount;
-				}
-				break;
 			case EMonsterType::Common:
 				MonsterSizeRadius = 48.0f;
-				
-				if ((ChaosDungeonState->CurrentMonsterCount < ChaosDungeonState->MonsterMaxSpawnLimit) && ChaosDungeonState->StageCommonCount < ChaosDungeonState->StageCommonLimit)
+
+				if ((ChaosDungeonState->CurrentMonsterCount < ChaosDungeonState->MonsterMaxSpawnLimit) && (ChaosDungeonState->StageCommonCount < ChaosDungeonState->StageCommonLimit))
 				{
-					if (CheckValidLocation(SpawnLocation, MonsterSizeRadius))
+					AMonster* Monster = World->SpawnActor<AMonster>(MonsterClass, SpawnLocation, SpawnRotation);
+					if (Monster)
 					{
-						World->SpawnActor<AMonster>(AMonster::StaticClass(), SpawnLocation, SpawnRotation);
+						PlayerHUD->OverlayWidget->WBPProgress->BindToMonster(Monster);
+						PlayerHUD->OverlayWidget->WBPMiniMapLogHill->AddMonster(Monster);
 						++ChaosDungeonState->CurrentMonsterCount;
 						++ChaosDungeonState->StageCommonCount;
 					}
 				}
+
 				break;
 			case EMonsterType::Named:
 				MonsterSizeRadius = 50.0f;
 				if (((ChaosDungeonState->CurrentMonsterCount + ChaosDungeonState->StageNamedCount) < ChaosDungeonState->MonsterMaxSpawnLimit) && (ChaosDungeonState->StageNamedCount < ChaosDungeonState->StageNamedLimit))
 				{
-					if (CheckValidLocation(SpawnLocation, MonsterSizeRadius))
+					ANamedMonster* NamedMonster = World->SpawnActor<ANamedMonster>(NamedMonsterClass, SpawnLocation, SpawnRotation);
+					if(NamedMonster)
 					{
-						World->SpawnActor<ANamedMonster>(ANamedMonster::StaticClass(), SpawnLocation, SpawnRotation);
+						PlayerHUD->OverlayWidget->WBPProgress->BindToMonster(NamedMonster);
+						PlayerHUD->OverlayWidget->WBPMiniMapLogHill->AddMonster(NamedMonster);
 						++ChaosDungeonState->CurrentMonsterCount;
 						++ChaosDungeonState->StageNamedCount;
 					}
@@ -105,13 +125,4 @@ void AMonsterSpawner::SpawnMonster(EMonsterType MonsterType)
 			}
 		}
 	}
-}
-
-bool AMonsterSpawner::CheckValidLocation(FVector NewSpawnLocation, float SpawnRadius)
-{
-	FCollisionShape CollisionShape = FCollisionShape::MakeSphere(SpawnRadius);
-
-	bool bIsValidLocation = !GetWorld()->OverlapBlockingTestByChannel(NewSpawnLocation, FQuat::Identity, ECC_WorldStatic, CollisionShape);
-
-	return bIsValidLocation;
 }

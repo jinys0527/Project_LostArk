@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "ChaosDungeonPortal.generated.h"
 
-class USphereComponent;
+class UCapsuleComponent;
 class UStaticMeshComponent;
 class UWidgetComponent;
 
@@ -20,7 +20,7 @@ public:
 	AChaosDungeonPortal();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Portal")
-	TObjectPtr<USphereComponent> Sphere;
+	TObjectPtr<UCapsuleComponent> Capsule;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Portal")
 	TObjectPtr<UStaticMeshComponent> Portal;
@@ -48,6 +48,19 @@ public:
 	static int32 MoveWidgetCount;
 
 	void LoadLevel(FName LevelName);
+
+	UFUNCTION()
+	void SetVisiblePortal();
+
+	FTimerHandle InteractionCheckTimer;
+
+	void CheckInteraction();
+
+	class AMyPlayer* OverlappedPlayer;
+
+	uint8 bIsOn : 1;
+
+	void SavePlayerData(UGameInstance* GameInstance);
 
 protected:
 	// Called when the game starts or when spawned

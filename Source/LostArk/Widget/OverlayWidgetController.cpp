@@ -40,25 +40,6 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 {
 	const ULostArkPlayerAttributeSet* LostArkPlayerAttributeSet = CastChecked<ULostArkPlayerAttributeSet>(AttributeSet);
 
-	TArray<AActor*> FoundMonsters;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMonster::StaticClass(), FoundMonsters);
-
-	if (FoundMonsters.Num() > 0)
-	{
-		AMonster* Monster = Cast<AMonster>(FoundMonsters[0]);
-		if (Monster)
-		{
-			ULostArkMonsterAttributeSet* LostArkMonsterAttributeSet = Cast<ULostArkMonsterAttributeSet>(Monster->GetAttributeSet());
-			UAbilitySystemComponent* MonsterAbilitySystemComponent = Monster->GetAbilitySystemComponent();
-
-			MonsterAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-				LostArkMonsterAttributeSet->GetMonsterMaxLifePointAttribute()).AddUObject(this, &UOverlayWidgetController::MonsterMaxLifePointChanged);
-
-			MonsterAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-				LostArkMonsterAttributeSet->GetMonsterCurrentLifePointAttribute()).AddUObject(this, &UOverlayWidgetController::MonsterCurrentLifePointChanged);
-		}
-	}
-
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 		LostArkPlayerAttributeSet->GetCurrentLifePointAttribute()).AddUObject(this, &UOverlayWidgetController::CurrentLifePointChanged);
 
@@ -83,6 +64,24 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 		LostArkPlayerAttributeSet->GetExpeditionRequiredEXPAttribute()).AddUObject(this, &UOverlayWidgetController::ExpeditionRequiredEXPChanged);
 
+}
+
+void UOverlayWidgetController::BindToMonsterEvents(AMonster* Monster)
+{
+	if (Monster)
+	{
+		ULostArkMonsterAttributeSet* LostArkMonsterAttributeSet = Cast<ULostArkMonsterAttributeSet>(Monster->GetAttributeSet());
+		UAbilitySystemComponent* MonsterAbilitySystemComponent = Monster->GetAbilitySystemComponent();
+
+		if (MonsterAbilitySystemComponent && LostArkMonsterAttributeSet)
+		{
+			MonsterAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+				LostArkMonsterAttributeSet->GetMonsterMaxLifePointAttribute()).AddUObject(this, &UOverlayWidgetController::MonsterMaxLifePointChanged);
+
+			MonsterAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+				LostArkMonsterAttributeSet->GetMonsterCurrentLifePointAttribute()).AddUObject(this, &UOverlayWidgetController::MonsterCurrentLifePointChanged);
+		}	
+	}
 }
 
 void UOverlayWidgetController::CurrentLifePointChanged(const FOnAttributeChangeData& Data) const

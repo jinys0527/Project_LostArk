@@ -9,9 +9,16 @@
 #include "ChaosDungeonState.h"
 #include "ChaosDungeonMode.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDungeonStateChanged, EDungeonState, NewState);
+
 class AMonsterSpawner;
 class ATP_TopDownPlayerController;
 class APlayerHUD;
+class AMonster;
+class ABossMonster;
+class ABossMonsterSpawner;
+class AChaosDungeonPortal;
+
 /**
  * 
  */
@@ -22,9 +29,29 @@ class LOSTARK_API AChaosDungeonMode : public AGameModeBase
 public:
 	AChaosDungeonMode();
 
+	UPROPERTY(BlueprintAssignable, Category = "Dungeon")
+	FOnDungeonStateChanged OnDungeonStateChanged;
+	
+	UFUNCTION()
+	void OnProgressChanged(float NewProgress);
+
+	UFUNCTION()
+	void OnBossDead();
+
+	AChaosDungeonPortal* BossPortal;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<UUserWidget> CompleteClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AMonster> MonsterClass;
+
 	APlayerHUD* PlayerHUD;
 
 	ATP_TopDownPlayerController* PC;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int RevivalCount = 0;
 
 	TArray<AMonsterSpawner*> Spawners;
 
@@ -40,13 +67,18 @@ public:
 	
 	FTimerHandle NamedSpawnTimer;
 
-	FTimerHandle BossTimer;
+	FVector Location;
+	
+	FRotator Rotation;
 
-	FTimerHandle CheckTimer;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AActor> PortalClass;
 
-	bool CheckSpawnPortal(float Percent);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<ABossMonster> BossClass;
 
-	bool CheckSpawnBoss(float Percent);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<ABossMonsterSpawner> BossMonsterSpawnerClass;
 
 	void SetCurrentState(EDungeonState NewState);
 
@@ -54,6 +86,19 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	UPROPERTY(BlueprintReadOnly)
+	int Time;
+
+	void StartTimer();
+
+	void UpdateTime();
+
+	FTimerHandle StageTimer;
+
+	UFUNCTION(BlueprintCallable)
+	void DeathPenalty();
+
+	UFUNCTION()
 	void HandleGameState(EDungeonState NewState);
 
 	void Loading();

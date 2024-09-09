@@ -32,4 +32,13 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* MaxHP;
 
+	float GetCurrentHP();
+
+	void SetCurrentHP(int NewCurrentHP);
+
+	float GetMaxHP();
+
+	void SetMaxHP(int NewMaxHP);
+
+	void SetHPBarPercent(float NewCurrentHP, float NewMaxHP);
 };

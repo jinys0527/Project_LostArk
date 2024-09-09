@@ -6,6 +6,8 @@
 #include "LostArkUserWidget.h"
 #include "MinimapMonsterWidget.generated.h"
 
+class AMonster;
+
 /**
  * 
  */
@@ -13,5 +15,7 @@ UCLASS()
 class LOSTARK_API UMinimapMonsterWidget : public ULostArkUserWidget
 {
 	GENERATED_BODY()
-	
+
+public:
+	AMonster* Monster;
 };

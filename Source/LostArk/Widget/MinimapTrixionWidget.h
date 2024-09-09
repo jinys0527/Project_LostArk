@@ -7,6 +7,7 @@
 #include "MinimapTrixionWidget.generated.h"
 
 class UMinimapPlayerWidget;
+class UMinimapPortalWidget;
 class UCanvasPanel;
 
 /**
@@ -19,12 +20,12 @@ class LOSTARK_API UMinimapTrixionWidget : public ULostArkUserWidget
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "MiniMap")
-	void UpdateMiniMap(UMinimapPlayerWidget* Player);
+	void UpdatePlayer(UMinimapPlayerWidget* PlayerWidget);
+
+    UFUNCTION(BlueprintCallable, Category = "MiniMap")
+    void UpdatePortal(UMinimapPortalWidget* PortalWidget);
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniMap")
-    UTexture2D* MiniMapTexture;
-
     UPROPERTY(meta = (BindWidget))
     UCanvasPanel* Map;
 
@@ -36,6 +37,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniMap")
     FVector2D WorldBoundsMax;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MiniMap")
+    TSubclassOf<AActor> Portalclass;
 
 private:
     FVector2D ConvertWorldToMiniMap(const FVector& WorldLocation) const;

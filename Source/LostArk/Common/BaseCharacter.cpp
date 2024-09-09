@@ -8,6 +8,7 @@
 #include "../AbilitySystem/LostArkPlayerAttributeSet.h"
 #include "../Widget/DamageWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -70,8 +71,9 @@ void ABaseCharacter::SetDead()
 {
 	isAlive = false;
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PlayDead();
-	SetActorEnableCollision(false);
 }
 
 UAbilitySystemComponent* ABaseCharacter::GetAbilitySystemComponent() const
