@@ -5,13 +5,13 @@
 #include "../Widget/TimerWidget.h"
 #include "../Widget/OverlayWidget.h"
 #include "../Player/PlayerHUD.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/TextBlock.h"
 
 void URevivalWidget::UpdateTime(int Time)
 {
-	ATP_TopDownPlayerController* PlayerController = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	ALostArkPlayerController* PlayerController = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD());
 	if (PlayerHUD)
 	{

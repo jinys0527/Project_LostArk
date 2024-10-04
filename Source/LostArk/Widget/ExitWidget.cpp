@@ -9,13 +9,24 @@
 #include "../Widget/MinimapLogHillWidget.h"
 #include "../Widget/MinimapTrixionWidget.h"
 #include "../ChaosDungeon/ChaosDungeonMode.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "../ChaosDungeon/ChaosDungeonGameInstance.h"
+#include "../Player/LostArkPlayerState.h"
+#include "../AbilitySystem/LostArkPlayerAttributeSet.h"
+#include "../Widget/EXPBattleWidget.h"
+#include "../Widget/EXPExpeditionWidget.h"
+#include "../Widget/ProgressWidget.h"
+#include "Components/ProgressBar.h"
+#include "../Player/MyPlayer.h"
+#include "Components/TextBlock.h"
+#include "../AbilitySystem/LostArkAbilitySystemComponent.h"
+#include "../Tag/LostArkGameplayTag.h"
 
 
 void UExitWidget::Exit()
 {
-	ATP_TopDownPlayerController* PlayerController = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	ALostArkPlayerController* PlayerController = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD());
 
 	AChaosDungeonMode* ChaosDungeonMode = Cast<AChaosDungeonMode>(GetWorld()->GetAuthGameMode());
@@ -63,5 +74,50 @@ void UExitWidget::Exit()
 		}
 	}
 
-	UGameplayStatics::OpenLevel(GetWorld(), "L_Trixion");
+	UChaosDungeonGameInstance* GameInstance = Cast<UChaosDungeonGameInstance>(GetGameInstance());
+	if (GameInstance)
+	{
+		AMyPlayer* Player = Cast<AMyPlayer>(PlayerController->GetPawn());
+		ALostArkPlayerState* PlayerState = Cast<ALostArkPlayerState>(Player->GetPlayerState());
+
+
+		if (ULostArkAbilitySystemComponent* PlayerASC = Cast<ULostArkAbilitySystemComponent>(Player->GetAbilitySystemComponent()))
+		{
+			if (const UAttributeSet* AttributeSet = PlayerASC->GetAttributeSet(ULostArkPlayerAttributeSet::StaticClass()))
+			{
+				const ULostArkPlayerAttributeSet* LostArkPlayerAttributeSet = Cast<ULostArkPlayerAttributeSet>(AttributeSet);
+
+				if (LostArkPlayerAttributeSet)
+				{
+					GameInstance->PlayerBattleEXP = LostArkPlayerAttributeSet->GetEXP();
+					GameInstance->PlayerExpeditionEXP = LostArkPlayerAttributeSet->GetExpeditionEXP();
+					GameInstance->PlayerBattleRequiredEXP = LostArkPlayerAttributeSet->GetRequiredEXP();
+					GameInstance->PlayerExpeditionRequiredEXP = LostArkPlayerAttributeSet->GetExpeditionRequiredEXP();
+				}
+			}
+		}
+
+		if (PlayerController)
+		{
+			GameInstance->PlayerBattleLevel = PlayerState->GetPlayerLevel();
+			GameInstance->PlayerExpeditionLevel = PlayerState->GetPlayerExpeditionLevel();
+		}
+
+		if (PlayerHUD)
+		{
+			if (PlayerHUD->OverlayWidget)
+			{
+				if (PlayerHUD->OverlayWidget->WBPExpBattle)
+				{
+					GameInstance->PlayerBattleEXPBarPercent = PlayerHUD->OverlayWidget->WBPExpBattle->BattleEXPBar->GetPercent();
+				}
+				if (PlayerHUD->OverlayWidget->WBPExpExpedition)
+				{
+					GameInstance->PlayerExpeditionEXPBarPercent = PlayerHUD->OverlayWidget->WBPExpExpedition->ExpeditionEXPBar->GetPercent();
+				}
+			}
+		}
+
+		GetWorld()->ServerTravel("L_Trixion", true);
+	}
 }

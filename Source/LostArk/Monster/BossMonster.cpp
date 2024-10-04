@@ -3,7 +3,7 @@
 
 #include "BossMonster.h"
 #include "../Player/PlayerHUD.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "../Widget/MonsterBossHPWidget.h"
 #include "../Widget/MonsterNamedHPWidget.h"
 #include "../Widget/MonsterCommonHPWidget.h"
@@ -48,7 +48,7 @@ void ABossMonster::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 
 	if (PlayerHUD)

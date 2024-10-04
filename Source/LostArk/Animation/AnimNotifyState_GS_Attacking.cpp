@@ -2,7 +2,7 @@
 
 #include "AnimNotifyState_GS_Attacking.h"
 #include "../Player/MyPlayer.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "../Weapon/GreatSword.h"
 #include "../Monster/Monster.h"
 
@@ -13,7 +13,6 @@ void UAnimNotifyState_GS_Attacking::NotifyBegin(USkeletalMeshComponent* MeshComp
 
 	if (Player)
 	{
-		Player->bIsAttacking = true;
 		Player->SetPlayerState(ECharacterState::Attacking);
 	}
 }
@@ -34,7 +33,16 @@ void UAnimNotifyState_GS_Attacking::NotifyEnd(USkeletalMeshComponent* MeshComp, 
 				}
 			}
 		}
-		Player->bIsAttacking = false;
 		Player->EquippedGreatSword->bIsOverlapped = false;
+
+		if (Player->Target.Num() == 0 && Player->PrevState != ECharacterState::Combat)
+		{
+			Player->SetPlayerState(ECharacterState::Battle);
+		}
+
+		else
+		{
+			Player->SetPlayerState(ECharacterState::Combat);
+		}
 	}
 }

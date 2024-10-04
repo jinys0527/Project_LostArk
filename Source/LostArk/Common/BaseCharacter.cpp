@@ -30,6 +30,8 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	FTimerHandle DelayTimer;
+	GetWorld()->GetTimerManager().SetTimer(DelayTimer, [this] {ApplyEffectToSelf(Invincible, 1.0f); }, 0.1f, false);
 }
 
 // Called every frame

@@ -4,7 +4,7 @@
 #include "BossMonsterSpawner.h"
 #include "Kismet/GameplayStatics.h"
 #include "../Monster/BossMonster.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "../Player/PlayerHUD.h"
 #include "../Widget/OverlayWidget.h"
 #include "../Widget/MinimapLogHillWidget.h"
@@ -18,7 +18,7 @@ ABossMonsterSpawner::ABossMonsterSpawner()
 
 ABossMonster* ABossMonsterSpawner::SpawnBossMonster(FVector SpawnLocation, FRotator SpawnRotation)
 {
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	ABossMonster* Boss = nullptr;
 	MonsterSizeRadius = 62.0f;

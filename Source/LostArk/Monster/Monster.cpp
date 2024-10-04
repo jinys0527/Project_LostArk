@@ -3,7 +3,7 @@
 
 #include "Monster.h"
 #include "GameFramework/Character.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 #include "../Widget/DamageWidget.h"
@@ -121,7 +121,7 @@ void AMonster::OnGetDamage(AActor* DamageCauser, float Damage)
 	AMyPlayer* Player = Cast<AMyPlayer>(DamageCauser);
 	if (Player)
 	{
-		ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(Player->GetController());
+		ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(Player->GetController());
 		APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 		if (PlayerHUD)
 		{
@@ -185,7 +185,7 @@ void AMonster::SetDead()
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(Target);
 	if (MyPlayer)
 	{
-		ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(MyPlayer->GetController());
+		ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(MyPlayer->GetController());
 		if (PC)
 		{
 			APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
@@ -261,7 +261,7 @@ void AMonster::InitAbilityActorInfo()
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<ULostArkAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 
 	UOverlayWidgetController* OverlayWidgetController = Cast<UOverlayWidgetController>(PlayerHUD->OverlayWidget->WidgetController);

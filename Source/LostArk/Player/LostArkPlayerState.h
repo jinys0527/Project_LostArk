@@ -21,6 +21,9 @@ public:
 	ALostArkPlayerState();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	void SetAttributeSet(UAttributeSet* NewAttributeSet);
+
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
 	FORCEINLINE float GetPlayerLevel() { return Level; }

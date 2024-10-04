@@ -15,7 +15,7 @@
 #include "../Widget/ProgressWidget.h"
 #include "../Widget/TimerWidget.h"
 #include "../Widget/OverlayWidget.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "../Widget/OverlayWidgetController.h"
 #include "../Widget/EXPBattleWidget.h"
 #include "../Widget/EXPExpeditionWidget.h"
@@ -32,6 +32,7 @@
 
 APlayerHUD::APlayerHUD() : AHUD()
 {
+	bIsCreated = false;
 }
 
 void APlayerHUD::BeginPlay()
@@ -58,66 +59,74 @@ void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 	checkf(OverlayWidgetClass, TEXT("Overlay Widget Class Uninitialized, please fill out BP_PlayerHUD"));
 	checkf(OverlayWidgetControllerClass, TEXT("Overlay Widget Controller Class Uninitialized, please fill out BP_PlayerHUD"));
 	
-	UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), OverlayWidgetClass);
-	OverlayWidget = Cast<UOverlayWidget>(Widget);
-	const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
-	UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParams);
-	OverlayWidget->SetWidgetController(WidgetController);
-	WidgetController->BroadcastInitialValues();
+	UUserWidget* Widget = nullptr;
 
-	ALostArkPlayerState* LostArkPlayerState = Cast<ALostArkPlayerState>(PS);
-	if (OverlayWidget->WBPHPBoss)
+	if (!bIsCreated)
 	{
-		OverlayWidget->WBPHPBoss->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (OverlayWidget->WBPHPNamed)
-	{
-		OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (OverlayWidget->WBPHPCommon)
-	{
-		OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (OverlayWidget->WBPTimer)
-	{
-		OverlayWidget->WBPTimer->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (OverlayWidget->WBPProgress)
-	{
-		OverlayWidget->WBPProgress->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (OverlayWidget->WBPExpBattle)
-	{
-		OverlayWidget->WBPExpBattle->UpdateBattleLevel(LostArkPlayerState->GetPlayerLevel());
-		OverlayWidget->WBPExpBattle->UpdateExpeditionLevel(LostArkPlayerState->GetPlayerExpeditionLevel());
-	}
-	if (OverlayWidget->WBPExpExpedition)
-	{
-		OverlayWidget->WBPExpExpedition->UpdateBattleLevel(LostArkPlayerState->GetPlayerLevel());
-		OverlayWidget->WBPExpExpedition->UpdateExpeditionLevel(LostArkPlayerState->GetPlayerExpeditionLevel());
-		OverlayWidget->WBPExpExpedition->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (OverlayWidget->WBPMiniMapLogHill && OverlayWidget->WBPMiniMapTrixion)
-	{
-		FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
-		if (LevelName == "L_Trixion")
+		Widget = CreateWidget<UUserWidget>(GetWorld(), OverlayWidgetClass);
+		bIsCreated = true;
+		OverlayWidget = Cast<UOverlayWidget>(Widget);
+		const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
+		UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParams);
+		OverlayWidget->SetWidgetController(WidgetController);
+		WidgetController->BroadcastInitialValues();
+		ALostArkPlayerState* LostArkPlayerState = Cast<ALostArkPlayerState>(PS);
+		if (OverlayWidget->WBPHPBoss)
 		{
-			OverlayWidget->WBPMiniMapLogHill->SetVisibility(ESlateVisibility::Collapsed);
+			OverlayWidget->WBPHPBoss->SetVisibility(ESlateVisibility::Collapsed);
 		}
-		else
+		if (OverlayWidget->WBPHPNamed)
 		{
-			OverlayWidget->WBPMiniMapTrixion->SetVisibility(ESlateVisibility::Collapsed);
+			OverlayWidget->WBPHPNamed->SetVisibility(ESlateVisibility::Collapsed);
 		}
+		if (OverlayWidget->WBPHPCommon)
+		{
+			OverlayWidget->WBPHPCommon->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (OverlayWidget->WBPTimer)
+		{
+			OverlayWidget->WBPTimer->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (OverlayWidget->WBPProgress)
+		{
+			OverlayWidget->WBPProgress->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (OverlayWidget->WBPExpBattle)
+		{
+			OverlayWidget->WBPExpBattle->UpdateBattleLevel(LostArkPlayerState->GetPlayerLevel());
+			OverlayWidget->WBPExpBattle->UpdateExpeditionLevel(LostArkPlayerState->GetPlayerExpeditionLevel());
+		}
+		if (OverlayWidget->WBPExpExpedition)
+		{
+			OverlayWidget->WBPExpExpedition->UpdateBattleLevel(LostArkPlayerState->GetPlayerLevel());
+			OverlayWidget->WBPExpExpedition->UpdateExpeditionLevel(LostArkPlayerState->GetPlayerExpeditionLevel());
+			OverlayWidget->WBPExpExpedition->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (OverlayWidget->WBPMiniMapLogHill && OverlayWidget->WBPMiniMapTrixion)
+		{
+			FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+			if (LevelName == "L_Trixion")
+			{
+				OverlayWidget->WBPMiniMapLogHill->SetVisibility(ESlateVisibility::Collapsed);
+			}
+			else
+			{
+				OverlayWidget->WBPMiniMapTrixion->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
+		if (OverlayWidget->WBPRevival)
+		{
+			OverlayWidget->WBPRevival->SetVisibility(ESlateVisibility::Hidden);
+		}
+		if (OverlayWidget->WBPEnter)
+		{
+			OverlayWidget->WBPEnter->SetVisibility(ESlateVisibility::Collapsed);
+		}
+
+
+		Widget->AddToViewport();
 	}
-	if (OverlayWidget->WBPRevival)
-	{
-		OverlayWidget->WBPRevival->SetVisibility(ESlateVisibility::Hidden);
-	}
-	if (OverlayWidget->WBPEnter)
-	{
-		OverlayWidget->WBPEnter->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	Widget->AddToViewport();
+	
 }
 
 void APlayerHUD::DrawHUD()

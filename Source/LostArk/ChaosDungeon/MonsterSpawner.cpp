@@ -7,7 +7,7 @@
 #include "../Monster/NamedMonster.h"
 #include "../Monster/BossMonster.h"
 #include "../Player/PlayerHUD.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "../Widget/OverlayWidget.h"
 #include "../Widget/MinimapLogHillWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -80,7 +80,7 @@ void AMonsterSpawner::SpawnMonster(EMonsterType MonsterType)
 
 	UWorld* World = GetWorld();
 
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(World, 0));
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(World, 0));
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 
 	if (World)

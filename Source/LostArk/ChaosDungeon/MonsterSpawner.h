@@ -33,9 +33,9 @@ public:
 
 	float MonsterSizeRadius;
 
-	float CommonMaxRadius = 300.0f;
+	float CommonMaxRadius = 200.0f;
 
-	float NamedMaxRadius = 200.0f;
+	float NamedMaxRadius = 150.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<AMonster> MonsterClass;

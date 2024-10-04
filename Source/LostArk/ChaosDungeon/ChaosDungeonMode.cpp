@@ -3,7 +3,7 @@
 
 #include "ChaosDungeonMode.h"
 #include "Kismet/GameplayStatics.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "MonsterSpawner.h"
 #include "../Player/MyPlayer.h"
 #include "../Player/PlayerHUD.h"
@@ -25,15 +25,17 @@
 #include "../Widget/EXPBattleWidget.h"
 #include "../Widget/EXPExpeditionWidget.h"
 #include "../Player/LostArkPlayerState.h"
+#include "../Tag/LostArkGameplayTag.h"
 
 AChaosDungeonMode::AChaosDungeonMode()
 {
 	SetCurrentState(EDungeonState::None);
+	bUseSeamlessTravel = true;
 }
 
 void AChaosDungeonMode::OnProgressChanged(float NewProgress)
 {
-	if (NewProgress >= 0.18f && NewProgress <= 0.2f)
+	if (NewProgress >= 0.18f && NewProgress <= 0.19f)
 	{
 		AChaosDungeonPortal* Portal = Cast<AChaosDungeonPortal>(UGameplayStatics::GetActorOfClass(GetWorld(), PortalClass));
 		if (Portal)
@@ -73,7 +75,6 @@ void AChaosDungeonMode::OnProgressChanged(float NewProgress)
 
 void AChaosDungeonMode::OnBossDead()
 {
-	UE_LOG(LogTemp, Warning, TEXT("1"));
 	BossPortal->SetVisiblePortal();
 }
 
@@ -105,17 +106,17 @@ void AChaosDungeonMode::SpawnMonsterAtRandom(EMonsterType MonsterType)
 			SelectedSpawner->SpawnMonster(MonsterType);
 			switch (MonsterType)
 			{
-				case EMonsterType::Common:
-					if (CurrentDungeonState->StageCommonCount == CurrentDungeonState->StageCommonLimit)
-					{
-						GetWorld()->GetTimerManager().ClearTimer(CommonSpawnTimer);
-					}
-					break;
-				case EMonsterType::Named:
-					if (CurrentDungeonState->StageNamedCount == CurrentDungeonState->StageNamedLimit)
-					{
-						GetWorld()->GetTimerManager().ClearTimer(NamedSpawnTimer);
-					}
+			case EMonsterType::Common:
+				if (CurrentDungeonState->StageCommonCount == CurrentDungeonState->StageCommonLimit)
+				{
+					GetWorld()->GetTimerManager().ClearTimer(CommonSpawnTimer);
+				}
+				break;
+			case EMonsterType::Named:
+				if (CurrentDungeonState->StageNamedCount == CurrentDungeonState->StageNamedLimit)
+				{
+					GetWorld()->GetTimerManager().ClearTimer(NamedSpawnTimer);
+				}
 			}
 		}
 	}
@@ -138,8 +139,9 @@ void AChaosDungeonMode::SetCurrentState(EDungeonState NewState)
 void AChaosDungeonMode::BeginPlay()
 {
 	CurrentDungeonState = GetWorld()->GetGameState<AChaosDungeonGameState>();
-	PC = Cast<ATP_TopDownPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	PlayerHUD = Cast<APlayerHUD>(PC->GetHUD()); //생성자에서 하면 Crash
+	PC = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+
 	if (PlayerHUD)
 	{
 		if (PlayerHUD->OverlayWidget)
@@ -172,6 +174,9 @@ void AChaosDungeonMode::BeginPlay()
 	if (LevelName == "L_LogHill_Stage1")
 	{
 		SetCurrentState(EDungeonState::Stage1);
+		AMyPlayer* Player = Cast<AMyPlayer>(PC->GetPawn());
+		float EffectLevel = Player->GetPlayerLevel();
+		Player->ApplyEffectToSelf(Player->InitEXPEffectClass, EffectLevel + 1);
 	}
 	else if (LevelName == "L_LogHill_Stage2")
 	{
@@ -183,41 +188,11 @@ void AChaosDungeonMode::BeginPlay()
 	}
 
 	UChaosDungeonGameInstance* GameInstance = Cast<UChaosDungeonGameInstance>(GetGameInstance());
-	if (GameInstance && LevelName != "L_LogHill_Stage1")
+	if (GameInstance)
 	{
 		AMyPlayer* Player = Cast<AMyPlayer>(PC->GetPawn());
-		ULostArkPlayerAttributeSet* PlayerAttributeSet = Cast<ULostArkPlayerAttributeSet>(Player->GetAttributeSet());
 
-		ALostArkPlayerState* PlayerState = Cast<ALostArkPlayerState>(Player->GetPlayerState());
-
-		
-		PlayerState->SetPlayerLevel(GameInstance->PlayerBattleLevel);
-		PlayerState->SetPlayerExpeditionLevel(GameInstance->PlayerExpeditionLevel);
-		
-		if (PlayerHUD)
-		{
-			if (PlayerHUD->OverlayWidget)
-			{
-				if (PlayerHUD->OverlayWidget->WBPProgress)
-				{
-					PlayerHUD->OverlayWidget->WBPProgress->ProgressValue->SetText(FText::FromString(GameInstance->ProgressValue));
-					PlayerHUD->OverlayWidget->WBPProgress->ChaosDungeonProgressBar->SetPercent(GameInstance->CurrentProgress);
-				}
-				if (PlayerHUD->OverlayWidget->WBPExpBattle)
-				{
-					PlayerHUD->OverlayWidget->WBPExpBattle->BattleLevel->SetText(FText::FromString(FString::FromInt(round(GameInstance->PlayerBattleLevel))));
-					//PlayerHUD->OverlayWidget->WBPExpBattle->BattleEXPBar->SetPercent(GameInstance->PlayerBattleEXPBarPercent);
-					PlayerHUD->OverlayWidget->WBPExpBattle->ExpeditionLevel->SetText(FText::FromString(FString::FromInt(round(GameInstance->PlayerExpeditionLevel))));
-				}
-				if (PlayerHUD->OverlayWidget->WBPExpExpedition)
-				{
-					PlayerHUD->OverlayWidget->WBPExpExpedition->BattleLevel->SetText(FText::FromString(FString::FromInt(round(GameInstance->PlayerBattleLevel))));
-					//PlayerHUD->OverlayWidget->WBPExpExpedition->ExpeditionEXPBar->SetPercent(GameInstance->PlayerExpeditionEXPBarPercent);
-					PlayerHUD->OverlayWidget->WBPExpExpedition->ExpeditionLevel->SetText(FText::FromString(FString::FromInt(round(GameInstance->PlayerExpeditionLevel))));
-				}
-			}
-		}
-		Player->InitAbility(PlayerAttributeSet);
+		Player->MaintainStatus(GameInstance);
 	}
 }
 
@@ -320,8 +295,8 @@ void AChaosDungeonMode::StartStage1()
 		[this]()
 		{
 			SpawnMonsterAtRandom(EMonsterType::Common);
-		}, 
-		1.5f, 
+		},
+		0.75f,
 		true);
 
 	//랜덤 일반몹 소환 최대 마리수 짧은 텀 시간 제한
@@ -359,7 +334,7 @@ void AChaosDungeonMode::StartStage2()
 		{
 			SpawnMonsterAtRandom(EMonsterType::Common);
 		},
-		1.5f,
+		0.75f,
 		true);
 
 	GetWorld()->GetTimerManager().SetTimer(
@@ -368,7 +343,7 @@ void AChaosDungeonMode::StartStage2()
 		{
 			SpawnMonsterAtRandom(EMonsterType::Named);
 		},
-		3.0f,
+		1.0f,
 		true);
 	//랜덤 일반몹 + 네임드 소환(최대 2마리, 마리수)
 	//45~50% 보스 소환(진행도)

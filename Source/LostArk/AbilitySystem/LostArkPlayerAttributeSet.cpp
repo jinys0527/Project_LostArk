@@ -33,7 +33,7 @@ ULostArkPlayerAttributeSet::ULostArkPlayerAttributeSet()
 	InitDamageIncrease(0.f);
 	InitDodge(0.f);
 
-	InitEXP(0.f);
+	//InitEXP(0.f);
 	InitHitRate(1.0f);
 }
 

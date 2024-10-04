@@ -12,7 +12,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDungeonStateChanged, EDungeonState, NewState);
 
 class AMonsterSpawner;
-class ATP_TopDownPlayerController;
+class ALostArkPlayerController;
 class APlayerHUD;
 class AMonster;
 class ABossMonster;
@@ -48,7 +48,7 @@ public:
 
 	APlayerHUD* PlayerHUD;
 
-	ATP_TopDownPlayerController* PC;
+	ALostArkPlayerController* PC;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int RevivalCount = 0;

@@ -9,6 +9,7 @@
 #include "../Player/MyPlayer.h"
 #include "AbilitySystemComponent.h"
 #include "../AbilitySystem/GameplayAbility/GA_Attack.h"
+#include "../AbilitySystem/LostArkPlayerAttributeSet.h"
 
 
 AGreatSword::AGreatSword() : AWeapon()
@@ -41,9 +42,9 @@ void AGreatSword::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 		Player->Target.Add(Monster);
 		if (!Monster->bIsHitted && Player->bIsAttack)
 		{
-			int32 RandomValue = FMath::RandRange(1, 10);
+			float Crit = FMath::FRand();
 
-			if (RandomValue <= 3)
+			if (Crit <= Cast<ULostArkPlayerAttributeSet>(Player->GetAttributeSet())->GetCritRate())
 			{
 				Player->bIsCritical = true;
 				UAbilitySystemComponent* AbilitySystemComponent = Player->GetAbilitySystemComponent();
@@ -57,6 +58,7 @@ void AGreatSword::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 			else
 			{
 				Player->bIsCritical = false;
+				UE_LOG(LogTemp, Warning, TEXT("%f"), Cast<ULostArkPlayerAttributeSet>(Player->GetAttributeSet())->GetCritRate());
 				UAbilitySystemComponent* AbilitySystemComponent = Player->GetAbilitySystemComponent();
 				if (AbilitySystemComponent)
 				{

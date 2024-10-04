@@ -131,6 +131,8 @@ public:
 	UPROPERTY()
 	class URevivalWidget* WBPRevival;
 
+	uint8 bIsCreated : 1;
+
 protected:
 	virtual void BeginPlay() override;
 

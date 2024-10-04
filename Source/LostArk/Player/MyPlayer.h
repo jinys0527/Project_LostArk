@@ -13,6 +13,7 @@ class AMonster;
 class UAttributeSet;
 class UNiagaraSystem;
 class UNiagaraComponent;
+class UChaosDungeonGameInstance;
 
 
 UCLASS(Blueprintable)
@@ -57,9 +58,6 @@ public:
 
 	void UnEquipSword();
 
-	UFUNCTION(BlueprintCallable)
-	void DestroyHUD();
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float WeaponATK;
 
@@ -72,8 +70,6 @@ public:
 	AGreatSword* EquippedGreatSword;
 
 	uint8 bIsEquipped : 1;
-
-	uint8 bIsAttacking : 1;
 
 	uint8 bIsAttack : 1;
 
@@ -140,6 +136,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
 	TSubclassOf<UGameplayEffect> UpdateExpeditionRequiredEXPEffectClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	TSubclassOf<UGameplayEffect> MaintainEXPEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	TSubclassOf<UGameplayEffect> MaintainRequiredEXPEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	TSubclassOf<UGameplayEffect> MaintainStatusEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	TSubclassOf<UGameplayEffect> MaintainMaxLifePointEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	TSubclassOf<UGameplayEffect> MaintainCurrentLMEffectClass;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = LevelUP)
 	UNiagaraSystem* LevelUPNiagara;
 
@@ -149,7 +160,7 @@ public:
 
 	virtual void InitAbilityActorInfo() override;
 
-	virtual void InitAbility(UAttributeSet* AttributeSet);
+	void MaintainStatus(UChaosDungeonGameInstance* GameInstance);
 
 private:
 	/** Top down camera */

@@ -55,19 +55,18 @@ void UMinimapLogHillWidget::UpdatePortal(UMinimapPortalWidget* PortalWidget)
 				if (CanvasPanelSlot)
 				{
 					CanvasPanelSlot->SetPosition(PortalMiniMapPosition);
-					if (!Portal->Portal->bHiddenInGame)
-					{
-						PortalWidget->SetVisibility(ESlateVisibility::Visible);
-					}
-					else
-					{
-						PortalWidget->SetVisibility(ESlateVisibility::Collapsed);
-					}
 				}
 			}
 			else
 			{
-				return;
+				if (!Portal->Portal->bHiddenInGame)
+				{
+					PortalWidget->SetVisibility(ESlateVisibility::Visible);
+				}
+				else
+				{
+					PortalWidget->SetVisibility(ESlateVisibility::Collapsed);
+				}
 			}
 		}
 	}
@@ -127,6 +126,8 @@ void UMinimapLogHillWidget::AddMonster(AMonster* Monster)
 			if (BossWidget)
 			{
 				BossWidget->Monster = Monster;
+				Monster->MiniMapWidget = BossWidget;
+				Monster->OnMonsterDeadWithMonster.AddDynamic(this, &UMinimapLogHillWidget::MonsterDead);
 				Map->AddChild(BossWidget);
 				MonsterLocation = BossWidget->Monster->GetActorLocation();
 				MonsterMiniMapPosition = ConvertWorldToMiniMap_Boss(MonsterLocation);
@@ -300,7 +301,7 @@ FVector2D UMinimapLogHillWidget::ConvertWorldToMiniMap_Named(const FVector& Worl
 	MiniMapPosition.X = (World2D.X - WorldBoundsMin.X) / (WorldBoundsMax.X - WorldBoundsMin.X);
 	MiniMapPosition.Y = (World2D.Y - WorldBoundsMin.Y) / (WorldBoundsMax.Y - WorldBoundsMin.Y);
 
-	MiniMapPosition.X += 0.14;
+	MiniMapPosition.X += 0.13;
 	MiniMapPosition.Y += 0.05;
 
 	// 비율을 미니맵 크기에 맞게 변환

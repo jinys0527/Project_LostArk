@@ -14,7 +14,7 @@
 #include "../Widget/DamageWidget.h"
 #include "Engine/World.h"
 #include "PlayerHUD.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "../Widget/PlayerStatusWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -31,13 +31,16 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Components/SceneComponent.h"
+#include "../ChaosDungeon/ChaosDungeonGameInstance.h"
+#include "../Widget/ProgressWidget.h"
+#include "../Widget/EXPBattleWidget.h"
+#include "../Widget/EXPExpeditionWidget.h"
+#include "Components/ProgressBar.h"
 
 
 AMyPlayer::AMyPlayer() : ABaseCharacter()
 {
 	bIsEquipped = false;
-
-	bIsAttacking = false;
 
 	bIsCritical = false;
 
@@ -83,7 +86,7 @@ void AMyPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AttachSword();	
+	AttachSword();
 
 	if (USkeletalMeshComponent* MeshComp = GetMesh())
 	{
@@ -141,7 +144,7 @@ void AMyPlayer::SetDead()
 		Tags.Remove(FName("Player"));
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		
+
 		if (AbilitySystemComponent)
 		{
 			AbilitySystemComponent->ClearAllAbilities();
@@ -156,7 +159,7 @@ void AMyPlayer::OnOutOfHealth()
 
 void AMyPlayer::OnGetDamage(AActor* DamageCauser, float Damage)
 {
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(GetController());
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	if (PlayerHUD)
 	{
@@ -222,17 +225,6 @@ void AMyPlayer::UnEquipSword()
 	}
 }
 
-void AMyPlayer::DestroyHUD()
-{
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
-	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
-	if (PlayerHUD)
-	{
-		PlayerHUD->OverlayWidget->RemoveFromViewport();
-
-	}
-}
-
 void AMyPlayer::AttachSword()
 {
 	if (GreatSwordClass)
@@ -289,7 +281,7 @@ void AMyPlayer::PossessedBy(AController* NewController)
 	}
 
 	APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
-	ATP_TopDownPlayerController* LostArkPlayerController = Cast<ATP_TopDownPlayerController>(PlayerController);
+	ALostArkPlayerController* LostArkPlayerController = Cast<ALostArkPlayerController>(PlayerController);
 
 	LostArkPlayerController->SetupGASInputComponent();
 
@@ -320,7 +312,7 @@ float AMyPlayer::GetPlayerLevel()
 void AMyPlayer::LevelUP()
 {
 	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(GetController());
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	check(LostArkPlayerState);
 	LostArkPlayerState->LevelUP();
@@ -349,18 +341,9 @@ void AMyPlayer::LevelUP()
 	);
 
 	//À§Á¬
-	GetWorld()->GetTimerManager().SetTimer(
-		LevelUpTimerHandle,
-		[this]()
-		{
-			ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
-			APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
-			PlayerHUD->SpawnLevelUPWidgetWithAnimation(GetActorLocation());
-		},
-		1.6f,
-		false);
-		
-	ApplyEffectToSelf(UpdateRequiredEXPEffectClass, GetPlayerLevel()+1);
+	PlayerHUD->SpawnLevelUPWidgetWithAnimation(GetActorLocation());
+
+	ApplyEffectToSelf(UpdateRequiredEXPEffectClass, GetPlayerLevel() + 1);
 	InitializeDefaultAttributes();
 	PlayerHUD->OverlayWidget->WBPExpBattle->UpdateBattleLevel(GetPlayerLevel());
 	PlayerHUD->OverlayWidget->WBPExpExpedition->UpdateBattleLevel(GetPlayerLevel());
@@ -376,11 +359,11 @@ float AMyPlayer::GetPlayerExpeditionLevel()
 void AMyPlayer::ExpeditionLevelUP()
 {
 	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController());
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(GetController());
 	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 	check(LostArkPlayerState);
 	LostArkPlayerState->ExpeditionLevelUP();
-	ApplyEffectToSelf(UpdateExpeditionRequiredEXPEffectClass, GetPlayerExpeditionLevel()+1);
+	ApplyEffectToSelf(UpdateExpeditionRequiredEXPEffectClass, GetPlayerExpeditionLevel() + 1);
 	PlayerHUD->OverlayWidget->WBPExpBattle->UpdateExpeditionLevel(GetPlayerExpeditionLevel());
 	PlayerHUD->OverlayWidget->WBPExpExpedition->UpdateExpeditionLevel(GetPlayerExpeditionLevel());
 }
@@ -394,7 +377,7 @@ void AMyPlayer::InitAbilityActorInfo()
 	AbilitySystemComponent = Cast<ULostArkAbilitySystemComponent>(LostArkPlayerState->GetAbilitySystemComponent());
 	AttributeSet = LostArkPlayerState->GetAttributeSet();
 
-	if (ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetController()))
+	if (ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(GetController()))
 	{
 		if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD()))
 		{
@@ -402,21 +385,107 @@ void AMyPlayer::InitAbilityActorInfo()
 		}
 	}
 
-	float EffectLevel = GetPlayerLevel();
-	ApplyEffectToSelf(InitEXPEffectClass, EffectLevel+1);
 	InitializeDefaultAttributes();
 }
 
-void AMyPlayer::InitAbility(UAttributeSet* NewAttributeSet)
+void AMyPlayer::MaintainStatus(UChaosDungeonGameInstance* GameInstance)
 {
-	ALostArkPlayerState* LostArkPlayerState = GetPlayerState<ALostArkPlayerState>();
-	check(LostArkPlayerState);
-	LostArkPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(LostArkPlayerState, this);
-	Cast<ULostArkAbilitySystemComponent>(LostArkPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
-	AbilitySystemComponent = Cast<ULostArkAbilitySystemComponent>(LostArkPlayerState->GetAbilitySystemComponent());
-	AttributeSet = NewAttributeSet;
+	if (GameInstance)
+	{
+		ALostArkPlayerState* MyPlayerState = Cast<ALostArkPlayerState>(GetPlayerState());
+		MyPlayerState->SetPlayerLevel(GameInstance->PlayerBattleLevel);
+		MyPlayerState->SetPlayerExpeditionLevel(GameInstance->PlayerExpeditionLevel);
 
-	float EffectLevel = GetPlayerLevel();
-	ApplyEffectToSelf(InitEXPEffectClass, EffectLevel + 1);
-	InitializeDefaultAttributes();
+		ALostArkPlayerController* PlayerController = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+		APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD());
+
+		if (PlayerHUD)
+		{
+			if (PlayerHUD->OverlayWidget)
+			{
+				if (PlayerHUD->OverlayWidget->WBPProgress)
+				{
+					PlayerHUD->OverlayWidget->WBPProgress->ProgressValue->SetText(FText::FromString(GameInstance->ProgressValue));
+					PlayerHUD->OverlayWidget->WBPProgress->ChaosDungeonProgressBar->SetPercent(GameInstance->CurrentProgress);
+				}
+				if (PlayerHUD->OverlayWidget->WBPExpBattle)
+				{
+					PlayerHUD->OverlayWidget->WBPExpBattle->UpdateBattleLevel(GameInstance->PlayerBattleLevel);
+					FTimerHandle LoadTimer;
+					GetWorld()->GetTimerManager().SetTimer(
+						LoadTimer, [this]() {
+							UChaosDungeonGameInstance* GameInstance = Cast<UChaosDungeonGameInstance>(GetGameInstance());
+							ALostArkPlayerState* PlayerState = Cast<ALostArkPlayerState>(GetPlayerState());
+							ALostArkPlayerController* PlayerController = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+							APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD());
+
+							PlayerHUD->OverlayWidget->WBPExpBattle->BattleEXPBar->SetPercent(GameInstance->PlayerBattleEXPBarPercent);
+						}, 0.1f, false
+					);
+
+					Cast<ULostArkPlayerAttributeSet>(MyPlayerState->GetAttributeSet())->SetEXP(GameInstance->PlayerBattleEXP);
+					Cast<ULostArkPlayerAttributeSet>(MyPlayerState->GetAttributeSet())->SetExpeditionEXP(GameInstance->PlayerExpeditionEXP);
+					PlayerHUD->OverlayWidget->WBPExpBattle->UpdateExpeditionLevel(GameInstance->PlayerExpeditionLevel);
+
+				}
+				if (PlayerHUD->OverlayWidget->WBPExpExpedition)
+				{
+					PlayerHUD->OverlayWidget->WBPExpExpedition->UpdateBattleLevel(GameInstance->PlayerBattleLevel);
+					FTimerHandle LoadTimer;
+					GetWorld()->GetTimerManager().SetTimer(
+						LoadTimer, [this]() {
+							UChaosDungeonGameInstance* GameInstance = Cast<UChaosDungeonGameInstance>(GetGameInstance());
+							ALostArkPlayerState* PlayerState = Cast<ALostArkPlayerState>(GetPlayerState());
+							ALostArkPlayerController* PlayerController = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+							APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD());
+
+							PlayerHUD->OverlayWidget->WBPExpExpedition->ExpeditionEXPBar->SetPercent(GameInstance->PlayerExpeditionEXPBarPercent);
+						}, 0.1f, false
+					);
+
+					PlayerHUD->OverlayWidget->WBPExpExpedition->UpdateExpeditionLevel(GameInstance->PlayerExpeditionLevel);
+				}
+			}
+		}
+
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(MaintainRequiredEXPEffectClass, 1.0f, ASC->MakeEffectContext());
+
+
+		if (SpecHandle.IsValid())
+		{
+			SpecHandle.Data->SetSetByCallerMagnitude(LOSTARKTAG_ATTRIBUTES_PLAYER_PRIMARY_REQUIREDEXP, GameInstance->PlayerBattleRequiredEXP);
+			SpecHandle.Data->SetSetByCallerMagnitude(LOSTARKTAG_ATTRIBUTES_PLAYER_PRIMARY_EXPEDITIONREQUIREDEXP, GameInstance->PlayerExpeditionRequiredEXP);
+
+			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+
+		FTimerHandle DelayTimer;
+		GetWorld()->GetTimerManager().SetTimer(DelayTimer, [this] {
+			UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+			FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(MaintainEXPEffectClass, 1.0f, ASC->MakeEffectContext());
+			UChaosDungeonGameInstance* GameInstance = Cast<UChaosDungeonGameInstance>(GetGameInstance());
+			if (SpecHandle.IsValid())
+			{
+				SpecHandle.Data->SetSetByCallerMagnitude(LOSTARKTAG_ATTRIBUTES_PLAYER_PRIMARY_EXP, GameInstance->PlayerBattleEXP);
+				SpecHandle.Data->SetSetByCallerMagnitude(LOSTARKTAG_ATTRIBUTES_PLAYER_PRIMARY_EXPEDITIONEXP, GameInstance->PlayerExpeditionEXP);
+
+				ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
+		}, 1.0f, false);
+
+
+		SpecHandle = ASC->MakeOutgoingSpec(MaintainCurrentLMEffectClass, 1.0f, ASC->MakeEffectContext());
+		if (SpecHandle.IsValid())
+		{
+			SpecHandle.Data->SetSetByCallerMagnitude(LOSTARKTAG_ATTRIBUTES_PLAYER_VITAL_CURRENTLIFEPOINT, GameInstance->PlayerCurrentLifePoint);
+			SpecHandle.Data->SetSetByCallerMagnitude(LOSTARKTAG_ATTRIBUTES_PLAYER_VITAL_CURRENTMANAPOINT, GameInstance->PlayerCurrentManaPoint);
+
+			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+
+		ApplyEffectToSelf(MaintainStatusEffectClass, GetPlayerLevel());
+
+		ApplyEffectToSelf(MaintainMaxLifePointEffectClass, GetPlayerLevel());
+	}
 }

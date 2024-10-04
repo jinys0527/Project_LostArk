@@ -6,7 +6,7 @@
 #include "../AbilitySystem/LostArkPlayerAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "PlayerHUD.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "../Widget/OverlayWidget.h"
 #include "../Widget/EXPBattleWidget.h"
 #include "../Widget/EXPExpeditionWidget.h"
@@ -35,6 +35,11 @@ UAbilitySystemComponent* ALostArkPlayerState::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
+void ALostArkPlayerState::SetAttributeSet(UAttributeSet* NewAttributeSet)
+{
+	AttributeSet = NewAttributeSet;
+}
+
 void ALostArkPlayerState::SetPlayerLevel(float NewLevel)
 {
 	Level = NewLevel;
@@ -49,8 +54,7 @@ void ALostArkPlayerState::OnRep_Level()
 {
 	//이팩트 + 문구
 	//사운드
-	UE_LOG(LogTemp, Warning, TEXT("1"));
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetPawn()->GetController());
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(GetPawn()->GetController());
 	if (PC)
 	{
 		APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
@@ -72,7 +76,7 @@ void ALostArkPlayerState::OnRep_ExpeditionLevel()
 {
 	//이팩트 + 문구
 	//사운드
-	ATP_TopDownPlayerController* PC = Cast<ATP_TopDownPlayerController>(GetPawn()->GetController());
+	ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(GetPawn()->GetController());
 	if (PC)
 	{
 		APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());

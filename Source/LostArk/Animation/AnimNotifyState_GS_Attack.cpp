@@ -12,8 +12,8 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 {
 	AMyPlayer* Player = Cast<AMyPlayer>(MeshComp->GetOwner());
 
-	if(Player)
-	{ 
+	if (Player)
+	{
 		if (UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent())
 		{
 			for (AMonster* Target : Player->Target)
@@ -22,13 +22,12 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 				{
 					if (Target->bIsHitted)
 					{
-						continue;  
+						continue;
 					}
 
-					if (IsValid(Target) && IsValid(Target->GetAbilitySystemComponent()))
+					if (Target)
 					{
-						UAbilitySystemComponent* TargetASC = Target->GetAbilitySystemComponent();
-						if (TargetASC)
+						if(UAbilitySystemComponent* TargetASC = Target->GetAbilitySystemComponent())
 						{
 							FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
 							EffectContext.AddInstigator(Player, Player->GetController());
@@ -36,10 +35,10 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 							if (EffectSpecHandle.IsValid())
 							{
 								ASC->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), TargetASC);
+								Target->BroadcastLifePoint();
 							}
 						}
 					}
-					Target->BroadcastLifePoint();
 				}
 			}
 		}

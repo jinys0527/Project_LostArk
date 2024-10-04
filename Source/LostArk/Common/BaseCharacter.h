@@ -109,6 +109,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
 	TSubclassOf<UGameplayEffect> DefaultVitalAttributes;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Effect")
+	TSubclassOf<UGameplayEffect> Invincible;
+
 	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float CurrentLevel) const;
 
 	void InitializeDefaultAttributes() const;

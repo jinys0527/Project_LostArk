@@ -5,7 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/Gameplaystatics.h"
-#include "../TP_TopDown/TP_TopDownPlayerController.h"
+#include "../LostArk/LostArkPlayerController.h"
 #include "../Player/PlayerHUD.h"
 #include "../Widget/MoveWidget.h"
 #include "../Player/MyPlayer.h"
@@ -20,6 +20,7 @@
 #include "../Player/LostArkPlayerState.h"
 #include "../Widget/EXPBattleWidget.h"
 #include "../Widget/EXPExpeditionWidget.h"
+#include "../AbilitySystem/LostArkAbilitySystemComponent.h"
 
 AChaosDungeonPortal::AChaosDungeonPortal()
 {
@@ -95,9 +96,27 @@ void AChaosDungeonPortal::CheckInteraction()
 		if (GameInstance)
 		{
 			ALostArkPlayerState* PlayerState = Cast<ALostArkPlayerState>(OverlappedPlayer->GetPlayerState());
-			ULostArkPlayerAttributeSet* LostArkPlayerAttributeSet = Cast<ULostArkPlayerAttributeSet>(PlayerState->GetAttributeSet());
 
-			ATP_TopDownPlayerController* PlayerController = Cast<ATP_TopDownPlayerController>(OverlappedPlayer->GetController());
+			
+			if (ULostArkAbilitySystemComponent* OverlappedPlayerASC = Cast<ULostArkAbilitySystemComponent>(OverlappedPlayer->GetAbilitySystemComponent()))
+			{
+				if (const UAttributeSet* AttributeSet = OverlappedPlayerASC->GetAttributeSet(ULostArkPlayerAttributeSet::StaticClass()))
+				{
+					const ULostArkPlayerAttributeSet* LostArkPlayerAttributeSet = Cast<ULostArkPlayerAttributeSet>(AttributeSet);
+
+					if (LostArkPlayerAttributeSet)
+					{
+						GameInstance->PlayerBattleEXP = LostArkPlayerAttributeSet->GetEXP();
+						GameInstance->PlayerExpeditionEXP = LostArkPlayerAttributeSet->GetExpeditionEXP();
+						GameInstance->PlayerBattleRequiredEXP = LostArkPlayerAttributeSet->GetRequiredEXP();
+						GameInstance->PlayerExpeditionRequiredEXP = LostArkPlayerAttributeSet->GetExpeditionRequiredEXP();
+						GameInstance->PlayerCurrentLifePoint = LostArkPlayerAttributeSet->GetCurrentLifePoint();
+						GameInstance->PlayerCurrentManaPoint = LostArkPlayerAttributeSet->GetCurrentManaPoint();
+					}
+				}
+			}
+
+			ALostArkPlayerController* PlayerController = Cast<ALostArkPlayerController>(OverlappedPlayer->GetController());
 			APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PlayerController->GetHUD());
 
 			if (PlayerController)
@@ -126,14 +145,17 @@ void AChaosDungeonPortal::CheckInteraction()
 				}
 			}
 		}
+		FTimerHandle DelayTimer;
+		GetWorld()->GetTimerManager().SetTimer(DelayTimer, 1.0f, false);
+
 		switch (ChaosDungeonState->CurrentState)
 		{
 		case EDungeonState::Stage1:
-			UGameplayStatics::OpenLevel(GetWorld(), "L_LogHill_Stage2");
+			GetWorld()->ServerTravel("L_LogHill_Stage2", true);
 			break;
 
 		case EDungeonState::Stage2:
-			UGameplayStatics::OpenLevel(GetWorld(), "L_LogHill_Stage3");
+			GetWorld()->ServerTravel("L_LogHill_Stage3", true);
 			break;
 		}
 	}
