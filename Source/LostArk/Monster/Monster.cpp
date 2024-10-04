@@ -185,6 +185,7 @@ void AMonster::SetDead()
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(Target);
 	if (MyPlayer)
 	{
+		MyPlayer->Target.Remove(this);
 		ALostArkPlayerController* PC = Cast<ALostArkPlayerController>(MyPlayer->GetController());
 		if (PC)
 		{
