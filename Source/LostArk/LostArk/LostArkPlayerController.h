@@ -99,7 +99,6 @@ protected:
 	void OnTouchTriggered();
 	void OnTouchReleased();
 	void InteractionStarted();
-	void InteractionReleased();
 	void TestTriggered();
 
 private:
