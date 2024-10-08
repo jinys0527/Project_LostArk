@@ -26,6 +26,7 @@
 #include "Components/ProgressBar.h"
 #include "../AbilitySystem/LostArkMonsterAttributeSet.h"
 #include "../AbilitySystem/LostArkPlayerAttributeSet.h"
+#include "../ChaosDungeon/ChaosDungeonMode.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -65,44 +66,47 @@ void ALostArkPlayerController::CheckMouseOver()
 	//DeprojectMousePositionToWorld(FVector& WorldLocation, FVector& WorldDirection)
 	//LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
 	//캐릭터의 주위에 Sphere Collision? 틱 0.1초 or linetrace 0.1초 단위
-	FVector WorldLocation, WorldDirection;
-
-	if (DeprojectMousePositionToWorld(WorldLocation, WorldDirection))
+	if (AChaosDungeonMode* GameMode = GetWorld()->GetAuthGameMode<AChaosDungeonMode>())
 	{
-		FVector Start = WorldLocation;
-		FVector End = WorldLocation + (WorldDirection * 10000.f);
+		FVector WorldLocation, WorldDirection;
 
-		FHitResult HitResult;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(GetPawn());
-
-		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
-
-		if (bHit)
+		if (DeprojectMousePositionToWorld(WorldLocation, WorldDirection))
 		{
-			AActor* HitActor = HitResult.GetActor();
-			APlayerHUD* PlayerHUD = Cast<APlayerHUD>(GetHUD());
-			if (PlayerHUD)
-			{
-				if (HitActor)
-				{
-					if (HitActor->IsA(NamedClass))
-					{
-						ANamedMonster* NamedMonster = Cast<ANamedMonster>(HitActor);
-						if (NamedMonster)
-						{
-							HandleHUDNamedMonster(PlayerHUD, NamedMonster);
-							UpdateHealth(NamedMonster);
-						}
-					}
+			FVector Start = WorldLocation;
+			FVector End = WorldLocation + (WorldDirection * 10000.f);
 
-					else if (HitActor->IsA(MonsterClass))
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(GetPawn());
+
+			bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+
+			if (bHit)
+			{
+				AActor* HitActor = HitResult.GetActor();
+				APlayerHUD* PlayerHUD = Cast<APlayerHUD>(GetHUD());
+				if (PlayerHUD)
+				{
+					if (HitActor)
 					{
-						AMonster* Monster = Cast<AMonster>(HitActor);
-						if (Monster)
+
+						if (HitActor->IsA(NamedClass))
 						{
-							HandleHUDCommonMonster(PlayerHUD, Monster);
-							UpdateHealth(Monster);
+							ANamedMonster* NamedMonster = Cast<ANamedMonster>(HitActor);
+							if (NamedMonster)
+							{
+								HandleHUDNamedMonster(PlayerHUD, NamedMonster);
+								UpdateHealth(NamedMonster);
+							}
+						}
+						if (HitActor->IsA(MonsterClass))
+						{
+							AMonster* Monster = Cast<AMonster>(HitActor);
+							if (Monster)
+							{
+								HandleHUDCommonMonster(PlayerHUD, Monster);
+								UpdateHealth(Monster);
+							}
 						}
 					}
 				}
@@ -241,7 +245,7 @@ void ALostArkPlayerController::SetupInputComponent()
 
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-	{	
+	{
 		// Setup mouse input events
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &ALostArkPlayerController::OnInputStarted);
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &ALostArkPlayerController::OnSetDestinationTriggered);
@@ -254,7 +258,6 @@ void ALostArkPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ALostArkPlayerController::OnTouchReleased);
 
 		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Started, this, &ALostArkPlayerController::InteractionStarted);
-		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Completed, this, &ALostArkPlayerController::InteractionReleased);
 
 		EnhancedInputComponent->BindAction(TestAction, ETriggerEvent::Triggered, this, &ALostArkPlayerController::TestTriggered);
 	}
@@ -274,7 +277,7 @@ void ALostArkPlayerController::SetupGASInputComponent()
 		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ALostArkPlayerController::GASInputPressed, 0);
 	}
-	
+
 }
 
 void ALostArkPlayerController::GASInputPressed(int32 InputId)
@@ -301,7 +304,7 @@ void ALostArkPlayerController::GASInputReleased(int32 InputId)
 {
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(GetPawn());
 	ALostArkPlayerState* PS = Cast<ALostArkPlayerState>(MyPlayer->GetPlayerState());
-	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent(); 
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
 
 	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputId);
 	if (Spec)
@@ -390,14 +393,6 @@ void ALostArkPlayerController::InteractionStarted()
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
 
 	MyPlayer->bIsInteractioned = true;
-}
-
-void ALostArkPlayerController::InteractionReleased()
-{
-	APawn* ControlledPawn = GetPawn();
-	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
-
-	MyPlayer->bIsInteractioned = false;
 }
 
 void ALostArkPlayerController::TestTriggered()

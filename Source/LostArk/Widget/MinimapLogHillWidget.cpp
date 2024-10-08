@@ -17,21 +17,28 @@
 void UMinimapLogHillWidget::UpdatePlayer(UMinimapPlayerWidget* PlayerWidget)
 {
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	FVector PlayerLocation = PlayerController->GetPawn()->GetActorLocation();
-
-	FVector2D PlayerMiniMapPosition = ConvertWorldToMiniMap_Player(PlayerLocation);
-
-	if (PlayerWidget)
+	
+	if (PlayerController)
 	{
-		if (!Map->HasChild(PlayerWidget))
+		if (PlayerController->GetPawn())
 		{
-			Map->AddChild(PlayerWidget);
-		}
-		
-		UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(PlayerWidget->Slot);
-		if (CanvasPanelSlot)
-		{
-			CanvasPanelSlot->SetPosition(PlayerMiniMapPosition);
+			FVector PlayerLocation = PlayerController->GetPawn()->GetActorLocation();
+
+			FVector2D PlayerMiniMapPosition = ConvertWorldToMiniMap_Player(PlayerLocation);
+
+			if (PlayerWidget)
+			{
+				if (!Map->HasChild(PlayerWidget))
+				{
+					Map->AddChild(PlayerWidget);
+				}
+
+				UCanvasPanelSlot* CanvasPanelSlot = Cast<UCanvasPanelSlot>(PlayerWidget->Slot);
+				if (CanvasPanelSlot)
+				{
+					CanvasPanelSlot->SetPosition(PlayerMiniMapPosition);
+				}
+			}
 		}
 	}
 }
