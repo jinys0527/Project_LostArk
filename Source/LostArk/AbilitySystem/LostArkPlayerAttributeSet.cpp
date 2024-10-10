@@ -13,7 +13,7 @@
 ULostArkPlayerAttributeSet::ULostArkPlayerAttributeSet()
 {
 	//Æ¯¼º
-	InitCrit(10.0f);
+	InitCrit(1800.0f);
 	InitSpecialization(10.0f);
 	InitSwiftness(10.0f);
 	InitDomination(10.0f);

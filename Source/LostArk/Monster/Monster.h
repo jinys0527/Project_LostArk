@@ -32,9 +32,6 @@ class LOSTARK_API AMonster : public ABaseCharacter
 public:
 	AMonster();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
-	APlayerHUD* MonsterHPBar;
-
 	virtual void PlayDead() override;
 
 	virtual void Attack() override;
@@ -50,6 +47,33 @@ public:
 	virtual void OnGetDamage(AActor* DamageCauser, float Damage);
 
 	virtual void SetDead();
+
+	virtual void InitAbilityActorInfo() override;
+
+	virtual void BroadcastLifePoint();
+
+	void SetDamageWidgetColor();
+
+protected:
+	virtual void BeginPlay() override;
+
+	
+private:
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayEffect")
+	TSubclassOf<class UGameplayEffect> EffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller")
+	TSubclassOf<class AController> MonsterAIControllerClass;
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnAttributeChangedSignature OnMonsterCurrentLifePointChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnAttributeChangedSignature OnMonsterMaxLifePointChanged;
+
+	UAnimInstance_Monster* AnimInstance;
 
 	FOnMonsterDead OnMonsterDead;
 
@@ -72,6 +96,8 @@ public:
 
 	uint8 bIsHitted : 1;
 
+	uint8 bIsCriticaled : 1;
+
 	float DisttoTarget;
 
 	AActor* Target;
@@ -80,28 +106,7 @@ public:
 
 	UUserWidget* MiniMapWidget;
 
-	virtual void InitAbilityActorInfo() override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+	APlayerHUD* MonsterHPBar;
 
-	virtual void BroadcastLifePoint();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayEffect")
-	TSubclassOf<class UGameplayEffect> EffectClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller")
-	TSubclassOf<class AController> MonsterAIControllerClass;
-
-	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
-	FOnAttributeChangedSignature OnMonsterCurrentLifePointChanged;
-
-	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
-	FOnAttributeChangedSignature OnMonsterMaxLifePointChanged;
-
-	UAnimInstance_Monster* AnimInstance;
-
-protected:
-	virtual void BeginPlay() override;
-
-	
-private:
-	
 };

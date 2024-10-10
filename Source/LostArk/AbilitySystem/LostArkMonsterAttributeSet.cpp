@@ -7,6 +7,11 @@
 #include "GameplayEffectExtension.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "../Tag/LostArkGameplayTag.h"
+#include "../Player/MyPlayer.h"
+#include "../Monster/Monster.h"
+#include "../Widget/DamageWidget.h"
+#include "Components/TextBlock.h"
+#include "../AbilitySystem/LostArkPlayerAttributeSet.h"
 
 ULostArkMonsterAttributeSet::ULostArkMonsterAttributeSet()
 {
@@ -20,7 +25,7 @@ void ULostArkMonsterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePro
 	/*
 	 * Primary Attributes
 	 */
-	
+
 	DOREPLIFETIME_CONDITION_NOTIFY(ULostArkMonsterAttributeSet, EXP, COND_None, REPNOTIFY_Always);
 
 	/*
@@ -90,21 +95,36 @@ void ULostArkMonsterAttributeSet::PostGameplayEffectExecute(const FGameplayEffec
 	}
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
-		SetMonsterCurrentLifePoint(FMath::Clamp(GetMonsterCurrentLifePoint() - GetDamage(), MinimumHealth, GetMonsterMaxLifePoint()));
 		AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
 		AActor* InstigatorActor = nullptr;
 
 		if (Data.EffectSpec.GetContext().GetInstigator())
 		{
 			InstigatorActor = Data.EffectSpec.GetContext().GetInstigator(); // 공격자 정보 가져오기
-		}
 
-		OnGetDamage.Broadcast(InstigatorActor, GetDamage());
+			AMyPlayer* Player = Cast<AMyPlayer>(InstigatorActor);
+
+			if (Player)
+			{
+				AMonster* Monster = Cast<AMonster>(TargetActor);
+
+				if (Monster->bIsCriticaled)
+				{
+					float PlayerCritDamage = Cast<ULostArkPlayerAttributeSet>(Player->GetAbilitySystemComponent()->GetAttributeSet(ULostArkPlayerAttributeSet::StaticClass()))->GetCritDamage();
+					SetDamage(GetDamage() * PlayerCritDamage);
+				}
+
+				SetMonsterCurrentLifePoint(FMath::Clamp(GetMonsterCurrentLifePoint() - GetDamage(), MinimumHealth, GetMonsterMaxLifePoint()));
+				OnGetDamage.Broadcast(InstigatorActor, GetDamage());
+
+				Monster->SetDamageWidgetColor();
+			}
+		}
 
 		SetDamage(0.0f);
 	}
 
-	if (bIsSet&&(GetMonsterCurrentLifePoint() <= 0.0f) && !bOutOfHealth)
+	if (bIsSet && (GetMonsterCurrentLifePoint() <= 0.0f) && !bOutOfHealth)
 	{
 		Data.Target.AddLooseGameplayTag(LOSTARKTAG_CHARACTER_ISDEAD);
 		OnOutOfHealth.Broadcast();
@@ -144,4 +164,9 @@ void ULostArkMonsterAttributeSet::OnRep_DEF(const FGameplayAttributeData& OldDEF
 void ULostArkMonsterAttributeSet::OnRep_MonsterCurrentLifePoint(const FGameplayAttributeData& OldMonsterCurrentLifePoint) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ULostArkMonsterAttributeSet, MonsterCurrentLifePoint, OldMonsterCurrentLifePoint);
+}
+
+void ULostArkMonsterAttributeSet::OnRep_Damage(const FGameplayAttributeData& OldDamage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULostArkMonsterAttributeSet, Damage, OldDamage);
 }

@@ -42,32 +42,14 @@ void AGreatSword::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 		Player->Target.Add(Monster);
 		if (!Monster->bIsHitted && Player->bIsAttack)
 		{
-			float Crit = FMath::FRand();
-
-			if (Crit <= Cast<ULostArkPlayerAttributeSet>(Player->GetAttributeSet())->GetCritRate())
+			UAbilitySystemComponent* AbilitySystemComponent = Player->GetAbilitySystemComponent();
+			if (AbilitySystemComponent)
 			{
-				Player->bIsCritical = true;
-				UAbilitySystemComponent* AbilitySystemComponent = Player->GetAbilitySystemComponent();
-				if (AbilitySystemComponent)
-				{
-					AbilitySystemComponent->TryActivateAbilityByClass(UGA_Attack::StaticClass());
-				}
-				Monster->bIsHitted = true;
-				bIsOverlapped = true;
+				AbilitySystemComponent->TryActivateAbilityByClass(UGA_Attack::StaticClass());
 			}
-			else
-			{
-				Player->bIsCritical = false;
-				UE_LOG(LogTemp, Warning, TEXT("%f"), Cast<ULostArkPlayerAttributeSet>(Player->GetAttributeSet())->GetCritRate());
-				UAbilitySystemComponent* AbilitySystemComponent = Player->GetAbilitySystemComponent();
-				if (AbilitySystemComponent)
-				{
-					AbilitySystemComponent->TryActivateAbilityByClass(UGA_Attack::StaticClass());
-				}
-				Monster->bIsHitted = true;
-				bIsOverlapped = true;
-			}
+			bIsOverlapped = true;
 		}
+
 		else if (Monster->bIsHitted && bIsOverlapped)
 		{
 			return;

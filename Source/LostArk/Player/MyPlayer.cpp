@@ -42,8 +42,6 @@ AMyPlayer::AMyPlayer() : ABaseCharacter()
 {
 	bIsEquipped = false;
 
-	bIsCritical = false;
-
 	bIsInteractioned = false;
 
 	SetPlayerState(ECharacterState::Idle);

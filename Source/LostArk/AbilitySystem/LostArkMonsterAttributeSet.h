@@ -77,7 +77,7 @@ public:
 	FGameplayAttributeData MonsterCurrentLifePoint;
 	ATTRIBUTE_ACCESSORS(ULostArkMonsterAttributeSet, MonsterCurrentLifePoint);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attack")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MonsterCurrentLifePoint, Category = "Attack")
 	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(ULostArkMonsterAttributeSet, Damage);
 
@@ -110,6 +110,9 @@ public:
 
 	UFUNCTION()
 	void OnRep_MonsterCurrentLifePoint(const FGameplayAttributeData& OldMonsterCurrentLifePoint) const;
+
+	UFUNCTION()
+	void OnRep_Damage(const FGameplayAttributeData& OldDamage) const;
 
 private:
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;

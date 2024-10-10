@@ -7,14 +7,12 @@
 #include "../Common/BaseCharacter.h"
 #include "MyPlayer.generated.h"
 
-
 class AGreatSword;
 class AMonster;
 class UAttributeSet;
 class UNiagaraSystem;
 class UNiagaraComponent;
 class UChaosDungeonGameInstance;
-
 
 UCLASS(Blueprintable)
 class AMyPlayer : public ABaseCharacter
@@ -33,11 +31,7 @@ public:
 	FORCEINLINE class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-
-	ECharacterState CurrentState;
-
-	ECharacterState PrevState;
-
+		
 	void SetPlayerState(ECharacterState NewState);
 
 	virtual void PlayDead() override;
@@ -58,31 +52,61 @@ public:
 
 	void UnEquipSword();
 
+	void AttachSword();
+	
+	float DrawTimer;	//칼 빼는 시간을 위한 타이머
+
+	void OnTimer();
+
+	FORCEINLINE virtual class UAnimMontage* GetEquipMontage() const { return EquipSwordMontage; }
+	
+	virtual void PossessedBy(AController* NewController) override;
+
+	virtual void OnRep_PlayerState() override;
+
+	float GetPlayerLevel();
+
+	void LevelUP();
+
+	float GetPlayerExpeditionLevel();
+
+	void ExpeditionLevelUP();
+
+	virtual void InitAbilityActorInfo() override;
+
+	void MaintainStatus(UChaosDungeonGameInstance* GameInstance);
+
+private:
+	/** Top down camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* TopDownCameraComponent;
+
+	/** Camera boom positioning the camera above the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class USpringArmComponent* CameraBoom;
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float WeaponATK;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AGreatSword> GreatSwordClass;
 
-	void AttachSword();
+	ECharacterState CurrentState;
+
+	ECharacterState PrevState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	AGreatSword* EquippedGreatSword;
 
 	uint8 bIsEquipped : 1;
 
-	uint8 bIsAttack : 1;
-
-	uint8 bIsCritical : 1;
+	uint8 bIsAttack : 1; 
 
 	UPROPERTY(BlueprintReadOnly)
 	uint8 bIsInteractioned : 1;
 
-	float DrawTimer;	//칼 빼는 시간을 위한 타이머
-
 	FTimerHandle DrawHandle;
-
-	void OnTimer();
 
 	int32 TimeCount;
 
@@ -100,8 +124,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactionBattleMontage;
 
-	FORCEINLINE virtual class UAnimMontage* GetEquipMontage() const { return EquipSwordMontage; }
-
 	UPROPERTY(Transient)
 	class UAnimInstance_Player* PlayerAnimInstance;
 
@@ -113,19 +135,7 @@ public:
 
 	TSet<AMonster*> Target;
 
-	virtual void PossessedBy(AController* NewController) override;
-
-	virtual void OnRep_PlayerState() override;
-
 	class UAnimInstance_Player* AnimInstance;
-
-	float GetPlayerLevel();
-
-	void LevelUP();
-
-	float GetPlayerExpeditionLevel();
-
-	void ExpeditionLevelUP();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
 	TSubclassOf<UGameplayEffect> InitEXPEffectClass;
@@ -157,17 +167,4 @@ public:
 	FTimerHandle LevelUpTimerHandle;
 
 	UNiagaraComponent* NiagaraComp;
-
-	virtual void InitAbilityActorInfo() override;
-
-	void MaintainStatus(UChaosDungeonGameInstance* GameInstance);
-
-private:
-	/** Top down camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* TopDownCameraComponent;
-
-	/** Camera boom positioning the camera above the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
 };

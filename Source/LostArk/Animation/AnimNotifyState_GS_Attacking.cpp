@@ -13,6 +13,7 @@ void UAnimNotifyState_GS_Attacking::NotifyBegin(USkeletalMeshComponent* MeshComp
 
 	if (Player)
 	{
+		Player->bIsAttack = true;
 		Player->SetPlayerState(ECharacterState::Attacking);
 	}
 }
@@ -23,6 +24,7 @@ void UAnimNotifyState_GS_Attacking::NotifyEnd(USkeletalMeshComponent* MeshComp, 
 
 	if (Player)
 	{
+		Player->bIsAttack = false;
 		if (Player->Target.Num() != 0)
 		{
 			for (AMonster* Monster : Player->Target)

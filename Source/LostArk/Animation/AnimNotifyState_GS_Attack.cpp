@@ -7,6 +7,7 @@
 #include "../Weapon/GreatSword.h"
 #include "GameplayEffect.h"
 #include "AbilitySystemComponent.h"
+#include "../AbilitySystem/LostArkPlayerAttributeSet.h"
 
 void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -24,19 +25,32 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 					{
 						continue;
 					}
-
-					if (Target)
+					else if (!Target->bIsHitted)
 					{
-						if(UAbilitySystemComponent* TargetASC = Target->GetAbilitySystemComponent())
+						Target->bIsHitted = true;
+					}
+
+					float Crit = FMath::FRand();
+					Crit *= 100.f;
+					float CritRate = Cast<ULostArkPlayerAttributeSet>(Player->GetAbilitySystemComponent()->GetAttributeSet(ULostArkPlayerAttributeSet::StaticClass()))->GetCritRate();
+					if (Crit >= CritRate)
+					{
+						Target->bIsCriticaled = true;
+					}
+					else
+					{
+						Target->bIsCriticaled = false;
+					}
+
+					if (UAbilitySystemComponent* TargetASC = Target->GetAbilitySystemComponent())
+					{
+						FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+						EffectContext.AddInstigator(Player, Player->GetController());
+						FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(EffectClass, 1.0f, EffectContext);
+						if (EffectSpecHandle.IsValid())
 						{
-							FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
-							EffectContext.AddInstigator(Player, Player->GetController());
-							FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(EffectClass, 1.0f, EffectContext);
-							if (EffectSpecHandle.IsValid())
-							{
-								ASC->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), TargetASC);
-								Target->BroadcastLifePoint();
-							}
+							ASC->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), TargetASC);
+							Target->BroadcastLifePoint();
 						}
 					}
 				}

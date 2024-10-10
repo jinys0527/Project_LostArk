@@ -55,7 +55,7 @@ AMonster::AMonster() : ABaseCharacter()
 	MonsterType = EMonsterType::Common;
 
 	bIsAttack = false;
-
+	bIsCriticaled = false;
 	bIsHitted = false;
 
 	AIControllerClass = MonsterAIControllerClass;
@@ -131,15 +131,6 @@ void AMonster::OnGetDamage(AActor* DamageCauser, float Damage)
 				if (wDamage)
 				{
 					wDamage->SynchronizeProperties();
-
-					if (Player && Player->bIsCritical == true)
-					{
-						wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.83077, 0.617207, 0.024158));
-					}
-					else if (Player && Player->bIsCritical != true)
-					{
-						wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.871367, 0.863157, 0.863157));
-					}
 					wDamage->DamageValue->SetShadowOffset(FVector2D(0, 0));
 					wDamage->DamageValue->SetShadowColorAndOpacity(FLinearColor::Transparent);
 
@@ -288,5 +279,17 @@ void AMonster::BroadcastLifePoint()
 			OnMonsterMaxLifePointChanged.Broadcast(Data.NewValue);
 		}
 	);
+	}
+}
+
+void AMonster::SetDamageWidgetColor()
+{
+	if (bIsCriticaled)
+	{
+		wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.83077, 0.617207, 0.024158)); //Crit
+	}
+	else
+	{
+		wDamage->DamageValue->SetColorAndOpacity(FLinearColor(0.871367, 0.863157, 0.863157)); //Normal
 	}
 }
