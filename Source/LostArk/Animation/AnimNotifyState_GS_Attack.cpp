@@ -17,17 +17,18 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 	{
 		if (UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent())
 		{
-			for (AMonster* Target : Player->Target)
+			TArray<AMonster*> TargetArray = Player->Target.Array();
+			for (int32 i = TargetArray.Num() - 1; i>=0; --i)
 			{
-				if (Target)
+				if (TargetArray[i])
 				{
-					if (Target->bIsHitted)
+					if (TargetArray[i]->bIsHitted)
 					{
 						continue;
 					}
-					else if (!Target->bIsHitted)
+					else if (!TargetArray[i]->bIsHitted)
 					{
-						Target->bIsHitted = true;
+						TargetArray[i]->bIsHitted = true;
 					}
 
 					float Crit = FMath::FRand();
@@ -35,14 +36,14 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 					float CritRate = Cast<ULostArkPlayerAttributeSet>(Player->GetAbilitySystemComponent()->GetAttributeSet(ULostArkPlayerAttributeSet::StaticClass()))->GetCritRate();
 					if (Crit >= CritRate)
 					{
-						Target->bIsCriticaled = true;
+						TargetArray[i]->bIsCriticaled = true;
 					}
 					else
 					{
-						Target->bIsCriticaled = false;
+						TargetArray[i]->bIsCriticaled = false;
 					}
 
-					if (UAbilitySystemComponent* TargetASC = Target->GetAbilitySystemComponent())
+					if (UAbilitySystemComponent* TargetASC = TargetArray[i]->GetAbilitySystemComponent())
 					{
 						FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
 						EffectContext.AddInstigator(Player, Player->GetController());
@@ -50,7 +51,7 @@ void UAnimNotifyState_GS_Attack::NotifyBegin(USkeletalMeshComponent* MeshComp, U
 						if (EffectSpecHandle.IsValid())
 						{
 							ASC->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data.Get(), TargetASC);
-							Target->BroadcastLifePoint();
+							TargetArray[i]->BroadcastLifePoint();
 						}
 					}
 				}

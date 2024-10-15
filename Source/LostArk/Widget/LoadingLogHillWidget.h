@@ -4,14 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "LostArkUserWidget.h"
+#include "LoadingWidget.h"
 #include "LoadingLogHillWidget.generated.h"
+
+class UProgressBar;
+class USlider;
 
 /**
  * 
  */
 UCLASS()
-class LOSTARK_API ULoadingLogHillWidget : public ULostArkUserWidget
+class LOSTARK_API ULoadingLogHillWidget : public ULoadingWidget
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void Loading();
+
+	virtual void Loopback();
+
+public:
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* LoadingGauge;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* LoadingGaugeArrow;
 };

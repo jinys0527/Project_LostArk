@@ -26,6 +26,8 @@
 #include "../Widget/EXPExpeditionWidget.h"
 #include "../Player/LostArkPlayerState.h"
 #include "../Tag/LostArkGameplayTag.h"
+#include "../Widget/LoadingLogHillWidget.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AChaosDungeonMode::AChaosDungeonMode()
 {
@@ -142,49 +144,71 @@ void AChaosDungeonMode::BeginPlay()
 	PC = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
 
-	if (PlayerHUD)
+	if (PC)
 	{
-		if (PlayerHUD->OverlayWidget)
+		AMyPlayer* Player = Cast<AMyPlayer>(PC->GetPawn());
+		Player->DisableInput(PC);
+		PC->DisableInput(PC);
+
+		if (PlayerHUD)
 		{
-			if (PlayerHUD->OverlayWidget->WBPMiniMapTrixion)
+			if (PlayerHUD->OverlayWidget)
 			{
-				PlayerHUD->OverlayWidget->WBPMiniMapTrixion->SetVisibility(ESlateVisibility::Collapsed);
-			}
-			if (PlayerHUD->OverlayWidget->WBPMiniMapLogHill)
-			{
-				PlayerHUD->OverlayWidget->WBPMiniMapLogHill->SetVisibility(ESlateVisibility::Visible);
-			}
+				if (PlayerHUD->OverlayWidget->WBPMiniMapTrixion)
+				{
+					PlayerHUD->OverlayWidget->WBPMiniMapTrixion->SetVisibility(ESlateVisibility::Collapsed);
+				}
+				if (PlayerHUD->OverlayWidget->WBPMiniMapLogHill)
+				{
+					PlayerHUD->OverlayWidget->WBPMiniMapLogHill->SetVisibility(ESlateVisibility::Visible);
+				}
 
-			OnDungeonStateChanged.AddDynamic(this, &AChaosDungeonMode::HandleGameState);
+				OnDungeonStateChanged.AddDynamic(this, &AChaosDungeonMode::HandleGameState);
 
-			if (PlayerHUD->OverlayWidget->WBPProgress)
-			{
-				PlayerHUD->OverlayWidget->WBPProgress->SetVisibility(ESlateVisibility::Visible);
-				PlayerHUD->OverlayWidget->WBPProgress->OnProgressBarChanged.AddDynamic(this, &AChaosDungeonMode::OnProgressChanged);
-			}
+				if (PlayerHUD->OverlayWidget->WBPProgress)
+				{
+					PlayerHUD->OverlayWidget->WBPProgress->SetVisibility(ESlateVisibility::Visible);
+					PlayerHUD->OverlayWidget->WBPProgress->OnProgressBarChanged.AddDynamic(this, &AChaosDungeonMode::OnProgressChanged);
+				}
 
-			if (PlayerHUD->OverlayWidget->WBPTimer)
-			{
-				PlayerHUD->OverlayWidget->WBPTimer->SetVisibility(ESlateVisibility::Visible);
+				if (PlayerHUD->OverlayWidget->WBPTimer)
+				{
+					PlayerHUD->OverlayWidget->WBPTimer->SetVisibility(ESlateVisibility::Visible);
+				}
 			}
 		}
-	}
 
-	FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
-	if (LevelName == "L_LogHill_Stage1")
-	{
-		SetCurrentState(EDungeonState::Stage1);
-		AMyPlayer* Player = Cast<AMyPlayer>(PC->GetPawn());
-		float EffectLevel = Player->GetPlayerLevel();
-		Player->ApplyEffectToSelf(Player->InitEXPEffectClass, EffectLevel + 1);
-	}
-	else if (LevelName == "L_LogHill_Stage2")
-	{
-		SetCurrentState(EDungeonState::Stage2);
-	}
-	else if (LevelName == "L_LogHill_Stage3")
-	{
-		SetCurrentState(EDungeonState::Stage3);
+		FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+		if (LevelName == "L_LogHill_Stage1")
+		{
+			if (LoadingLogHillWidgetClass[0])
+			{
+				LoadingLogHillWidget = CreateWidget<ULoadingLogHillWidget>(GetWorld(), LoadingLogHillWidgetClass[0]);
+				LoadingLogHillWidget->AddToViewport();
+
+				StartLoadingCheck();
+			}
+		}
+		else if (LevelName == "L_LogHill_Stage2")
+		{
+			if (LoadingLogHillWidgetClass[1])
+			{
+				LoadingLogHillWidget = CreateWidget<ULoadingLogHillWidget>(GetWorld(), LoadingLogHillWidgetClass[1]);
+				LoadingLogHillWidget->AddToViewport();
+
+				StartLoadingCheck();
+			}
+		}
+		else if (LevelName == "L_LogHill_Stage3")
+		{
+			if (LoadingLogHillWidgetClass[2])
+			{
+				LoadingLogHillWidget = CreateWidget<ULoadingLogHillWidget>(GetWorld(), LoadingLogHillWidgetClass[2]);
+				LoadingLogHillWidget->AddToViewport();
+
+				StartLoadingCheck();
+			}
+		}
 	}
 
 	UChaosDungeonGameInstance* GameInstance = Cast<UChaosDungeonGameInstance>(GetGameInstance());
@@ -221,9 +245,6 @@ void AChaosDungeonMode::HandleGameState(EDungeonState NewState)
 {
 	switch (NewState)
 	{
-	case EDungeonState::PreStart:
-		Loading();
-		break;
 	case EDungeonState::Start:
 		StartGame();
 		break;
@@ -240,12 +261,6 @@ void AChaosDungeonMode::HandleGameState(EDungeonState NewState)
 		EndGame();
 		break;
 	}
-}
-
-void AChaosDungeonMode::Loading()
-{
-	//로딩 위젯?
-	SetCurrentState(EDungeonState::Stage1);
 }
 
 //환산 일반 25마리 2.5퍼 네임드 50마리 5퍼 보스 100마리 10퍼 
@@ -408,5 +423,43 @@ void AChaosDungeonMode::Fail()
 	{
 		AMonster* CurrentMonster = Cast<AMonster>(Monster);
 		CurrentMonster->Destroy();
+	}
+}
+
+void AChaosDungeonMode::StartLoadingCheck()
+{
+	GetWorld()->GetTimerManager().SetTimer(LoadingTimer, this, &AChaosDungeonMode::CheckLoadingComplete, 0.6f, true);
+}
+
+void AChaosDungeonMode::CheckLoadingComplete()
+{
+	if (LoadingLogHillWidget->bLoadComplete)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(LoadingTimer);
+
+		AMyPlayer* Player = Cast<AMyPlayer>(PC->GetPawn());
+		Player->EnableInput(PC);
+		PC->EnableInput(PC);
+
+		FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+		if (LevelName == "L_LogHill_Stage1")
+		{
+			SetCurrentState(EDungeonState::Stage1);
+			Player = Cast<AMyPlayer>(PC->GetPawn());
+			float EffectLevel = Player->GetPlayerLevel();
+			Player->ApplyEffectToSelf(Player->InitEXPEffectClass, EffectLevel + 1);
+		}
+		else if (LevelName == "L_LogHill_Stage2")
+		{
+			SetCurrentState(EDungeonState::Stage2);
+		}
+		else if (LevelName == "L_LogHill_Stage3")
+		{
+			SetCurrentState(EDungeonState::Stage3);
+		}
+	}
+	else
+	{
+		LoadingLogHillWidget->Loopback();
 	}
 }

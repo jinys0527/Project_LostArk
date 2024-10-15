@@ -5,7 +5,7 @@
 
 AChaosDungeonGameState::AChaosDungeonGameState()
 {
-	CurrentState = EDungeonState::PreStart;
+	CurrentState = EDungeonState::Start;
 	MonsterMaxSpawnLimit = 6;
 	NamedMonsterMaxSpawnLimit = 2;
 	CurrentMonsterCount = 0;

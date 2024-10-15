@@ -135,6 +135,8 @@ public:
 
 	TSet<AMonster*> Target;
 
+	TSet<AMonster*> TargetDestroy;
+
 	class UAnimInstance_Player* AnimInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)

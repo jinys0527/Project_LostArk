@@ -9,7 +9,6 @@ UENUM(BlueprintType)
 enum class EDungeonState : uint8
 {
 	None UMETA(DisplayName = "None"),
-	PreStart UMETA(DisplayName = "PreStart"),
 	Start UMETA(DisplayName = "Start"),
 	Stage1 UMETA(DisplayName = "Stage1"),
 	Stage2 UMETA(DisplayName = "Stage2"),

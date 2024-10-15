@@ -18,9 +18,10 @@ class AMonster;
 class ABossMonster;
 class ABossMonsterSpawner;
 class AChaosDungeonPortal;
+class ULoadingLogHillWidget;
 
 /**
- * 
+ *
  */
 UCLASS()
 class LOSTARK_API AChaosDungeonMode : public AGameModeBase
@@ -28,15 +29,59 @@ class LOSTARK_API AChaosDungeonMode : public AGameModeBase
 	GENERATED_BODY()
 public:
 	AChaosDungeonMode();
-
-	UPROPERTY(BlueprintAssignable, Category = "Dungeon")
-	FOnDungeonStateChanged OnDungeonStateChanged;
-	
 	UFUNCTION()
 	void OnProgressChanged(float NewProgress);
 
 	UFUNCTION()
 	void OnBossDead();
+
+	void FindAllSpawners();
+
+	void SpawnMonsterAtRandom(EMonsterType MonsterType);
+
+	void SetCurrentState(EDungeonState NewState);
+
+	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
+
+	void StartTimer();
+
+	void UpdateTime();
+
+	UFUNCTION(BlueprintCallable)
+	void DeathPenalty();
+
+	UFUNCTION()
+	void HandleGameState(EDungeonState NewState);
+
+	void StartGame();
+
+	void StartStage1();
+
+	void StartStage2();
+
+	void StartStage3();
+
+	void EndGame();
+
+	void Fail();
+
+	void StartLoadingCheck();
+
+	void CheckLoadingComplete();
+
+public:
+
+	FTimerHandle LoadingTimer;
+
+	ULoadingLogHillWidget* LoadingLogHillWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<TSubclassOf<ULoadingLogHillWidget>> LoadingLogHillWidgetClass;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dungeon")
+	FOnDungeonStateChanged OnDungeonStateChanged;
 
 	AChaosDungeonPortal* BossPortal;
 
@@ -55,20 +100,19 @@ public:
 
 	TArray<AMonsterSpawner*> Spawners;
 
-	void FindAllSpawners();
-
-	void SpawnMonsterAtRandom(EMonsterType MonsterType);
+	UPROPERTY(BlueprintReadOnly)
+	int Time;
 
 	AChaosDungeonGameState* CurrentDungeonState;
 
 	EDungeonState CurrentState;
-	
+
 	FTimerHandle CommonSpawnTimer;
-	
+
 	FTimerHandle NamedSpawnTimer;
 
 	FVector Location;
-	
+
 	FRotator Rotation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -80,38 +124,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<ABossMonsterSpawner> BossMonsterSpawnerClass;
 
-	void SetCurrentState(EDungeonState NewState);
-
-	virtual void BeginPlay() override;
-
-	virtual void Tick(float DeltaSeconds) override;
-
-	UPROPERTY(BlueprintReadOnly)
-	int Time;
-
-	void StartTimer();
-
-	void UpdateTime();
-
 	FTimerHandle StageTimer;
-
-	UFUNCTION(BlueprintCallable)
-	void DeathPenalty();
-
-	UFUNCTION()
-	void HandleGameState(EDungeonState NewState);
-
-	void Loading();
-
-	void StartGame();
-
-	void StartStage1();
-
-	void StartStage2();
-
-	void StartStage3();
-
-	void EndGame();
-
-	void Fail();
 };

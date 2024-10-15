@@ -5,6 +5,8 @@
 #include "../LostArk/LostArkPlayerController.h"
 #include "../Weapon/GreatSword.h"
 #include "../Monster/Monster.h"
+#include "../Tag/LostArkGameplayTag.h"
+#include "AbilitySystemComponent.h"
 
 
 void UAnimNotifyState_GS_Attacking::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
@@ -32,6 +34,18 @@ void UAnimNotifyState_GS_Attacking::NotifyEnd(USkeletalMeshComponent* MeshComp, 
 				if (Monster)
 				{
 					Monster->bIsHitted = false;
+					if (Monster->GetAbilitySystemComponent()->HasMatchingGameplayTag(LOSTARKTAG_CHARACTER_ISDEAD))
+					{
+						Player->TargetDestroy.Add(Monster);
+					}
+				}
+			}
+
+			for (AMonster* DestroyMonster : Player->TargetDestroy)
+			{
+				if (DestroyMonster)
+				{
+					Player->Target.Remove(DestroyMonster);
 				}
 			}
 		}

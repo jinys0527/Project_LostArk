@@ -400,8 +400,14 @@ void ALostArkPlayerController::TestTriggered()
 	APawn* ControlledPawn = GetPawn();
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
 
-	const UAttributeSet* AttributeSet = MyPlayer->GetAbilitySystemComponent()->GetAttributeSet(ULostArkPlayerAttributeSet::StaticClass());
-	const ULostArkPlayerAttributeSet* PlayerAttributeSet = Cast< ULostArkPlayerAttributeSet>(AttributeSet);
 
-	UE_LOG(LogTemp, Warning, TEXT("%f"), PlayerAttributeSet->GetEXP());
+	AChaosDungeonMode* DungeonGameMode = Cast<AChaosDungeonMode>(GetWorld()->GetAuthGameMode());
+	if (DungeonGameMode)
+	{
+		// EDungeonState의 값을 FString으로 변환
+		FString StateString = UEnum::GetValueAsString(DungeonGameMode->CurrentState);
+
+		// 로그 출력
+		UE_LOG(LogTemp, Warning, TEXT("Current State: %s"), *StateString);
+	}
 }
