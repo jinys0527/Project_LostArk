@@ -11,6 +11,8 @@ AChaosDungeonGameState::AChaosDungeonGameState()
 	CurrentMonsterCount = 0;
 	StageNamedCount = 0;
 	StageCommonCount = 0;
+	StageAliveCommonCount = 0;
+	StageAliveNamedCount = 0;
 }
 
 void AChaosDungeonGameState::SetCurrentState(EDungeonState NewState)

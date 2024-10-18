@@ -35,7 +35,7 @@ public:
 		int32 OtherBodyIndex
 	);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<class UStaticMeshComponent> Weapon;
 
 protected:

@@ -221,6 +221,15 @@ void AMonster::SetDead()
 	{
 		AChaosDungeonGameState* ChaosDungeonState = Cast<AChaosDungeonGameState>(CurrentState);
 		--ChaosDungeonState->CurrentMonsterCount;
+		switch (MonsterType)
+		{
+		case EMonsterType::Common:
+			--ChaosDungeonState->StageAliveCommonCount;
+			break;
+		case EMonsterType::Named:
+			--ChaosDungeonState->StageAliveNamedCount;
+			break;
+		}
 	}
 
 	isAlive = false;

@@ -28,16 +28,20 @@
 #include "../Tag/LostArkGameplayTag.h"
 #include "../Widget/LoadingLogHillWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ChaosDungeonCore.h"
 
 AChaosDungeonMode::AChaosDungeonMode()
 {
 	SetCurrentState(EDungeonState::None);
 	bUseSeamlessTravel = true;
+	bIsExistCore = false;
+	bIsSpawnerDestroyed = false;
+	bIsCompleteSpawn = false;
 }
 
 void AChaosDungeonMode::OnProgressChanged(float NewProgress)
 {
-	if (NewProgress >= 0.18f && NewProgress <= 0.19f)
+	if (NewProgress >= 0.18f && CurrentState == EDungeonState::Stage1)
 	{
 		AChaosDungeonPortal* Portal = Cast<AChaosDungeonPortal>(UGameplayStatics::GetActorOfClass(GetWorld(), PortalClass));
 		if (Portal)
@@ -50,7 +54,7 @@ void AChaosDungeonMode::OnProgressChanged(float NewProgress)
 		}
 	}
 
-	if (NewProgress >= 0.45f && NewProgress <= 0.5f)
+	if (NewProgress >= 0.45f && NewProgress <= 0.50f)
 	{
 		BossPortal = Cast<AChaosDungeonPortal>(UGameplayStatics::GetActorOfClass(GetWorld(), PortalClass));
 		Location = BossPortal->GetActorLocation();
@@ -69,7 +73,7 @@ void AChaosDungeonMode::OnProgressChanged(float NewProgress)
 		}
 	}
 
-	if (NewProgress == 1.0f)
+	if (NewProgress >= 1.0f)
 	{
 		SetCurrentState(EDungeonState::End);
 	}
@@ -291,15 +295,17 @@ void AChaosDungeonMode::StartStage1()
 	{
 		if (PlayerHUD->OverlayWidget->WBPTimer)
 		{
-			if (Time == 0)
-			{
-				GetWorld()->GetTimerManager().ClearTimer(StageTimer);
-				SetCurrentState(EDungeonState::Fail);
-			}
-
 			PlayerHUD->OverlayWidget->WBPTimer->InitTime(Time);
 		}
 	}
+
+	FTimerHandle EndTimer;
+	GetWorld()->GetTimerManager().SetTimer(EndTimer, [this] {
+		if (Time == 0)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(StageTimer);
+			SetCurrentState(EDungeonState::Fail);
+		}}, Time, false);
 
 	CurrentDungeonState->StageCommonLimit = 10;
 
@@ -328,15 +334,17 @@ void AChaosDungeonMode::StartStage2()
 	{
 		if (PlayerHUD->OverlayWidget->WBPTimer)
 		{
-			if (Time == 0)
-			{
-				GetWorld()->GetTimerManager().ClearTimer(StageTimer);
-				SetCurrentState(EDungeonState::Fail);
-			}
-
 			PlayerHUD->OverlayWidget->WBPTimer->InitTime(Time);
 		}
 	}
+
+	FTimerHandle EndTimer;
+	GetWorld()->GetTimerManager().SetTimer(EndTimer, [this] {
+		if (Time == 0)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(StageTimer);
+			SetCurrentState(EDungeonState::Fail);
+		}}, Time, false);
 
 	CurrentDungeonState->StageCommonLimit = 4;
 	CurrentDungeonState->StageNamedLimit = 4;
@@ -377,16 +385,56 @@ void AChaosDungeonMode::StartStage3()
 	{
 		if (PlayerHUD->OverlayWidget->WBPTimer)
 		{
-			if (Time == 0)
-			{
-				GetWorld()->GetTimerManager().ClearTimer(StageTimer);
-				SetCurrentState(EDungeonState::Fail);
-			}
-
 			PlayerHUD->OverlayWidget->WBPTimer->InitTime(Time);
 		}
 	}
 
+	FTimerHandle EndTimer;
+	                                                
+	GetWorld()->GetTimerManager().SetTimer(EndTimer, [this] {
+		if (Time == 0)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(StageTimer);
+			SetCurrentState(EDungeonState::Fail);
+		}}, Time, false);
+
+	CurrentDungeonState->StageCommonLimit = 3;
+	CurrentDungeonState->StageNamedLimit = 1;
+
+	AMonsterSpawner* Spawner = GetWorld()->SpawnActor<AMonsterSpawner>(MonsterSpawnerClass, SpawnerLocation, FRotator::ZeroRotator);
+
+	for (int i = 0; i < 3; ++i)
+	{
+		Spawner->SpawnMonster(EMonsterType::Common, Spawner->GetActorLocation());
+		if (i == 2)
+		{
+			bIsCompleteSpawn = true;
+		}
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(DestroySpawnerTimer, [this] {
+		if (bIsCompleteSpawn && CurrentDungeonState->CurrentMonsterCount == 0)
+		{
+			AMonsterSpawner* ExistSpawner = Cast<AMonsterSpawner>(UGameplayStatics::GetActorOfClass(GetWorld(), MonsterSpawnerClass));
+			ExistSpawner->Destroy();
+			bIsSpawnerDestroyed = true;
+			GetWorld()->GetTimerManager().ClearTimer(DestroySpawnerTimer);
+		}
+		}, 1.0f, true);
+	
+	
+	GetWorld()->GetTimerManager().SetTimer(CoreTimer, [this] {
+		if (bIsSpawnerDestroyed && CurrentDungeonState->CurrentMonsterCount == 0 && !bIsExistCore)
+		{
+			AChaosDungeonCore* Core = GetWorld()->SpawnActor<AChaosDungeonCore>(ChaosDungeonCoreClass, *CoreLocations.GetData(), FRotator::ZeroRotator);
+			bIsExistCore = true;
+			CoreLocations.RemoveAt(0);
+		}
+		if (CoreLocations.IsEmpty())
+		{
+			GetWorld()->GetTimerManager().ClearTimer(CoreTimer);
+		}
+		}, 1.0f, true);
 
 	//랜덤 일반몹 + 네임드 소환 - 빨간결정 깰 시 
 	//스포너를 이동시키며 일반몹 좀 잡으면 결정 소환 
@@ -402,6 +450,33 @@ void AChaosDungeonMode::StartStage3()
 
 void AChaosDungeonMode::EndGame()
 {
+	if (GetWorld()->GetTimerManager().IsTimerActive(StageTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(StageTimer);
+	}
+	if (GetWorld()->GetTimerManager().IsTimerActive(CommonSpawnTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CommonSpawnTimer);
+	}
+	if (GetWorld()->GetTimerManager().IsTimerActive(NamedSpawnTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(NamedSpawnTimer);
+	}
+
+	TArray<AActor*> Monsters;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), MonsterClass, Monsters);
+	if (!Monsters.IsEmpty())
+	{
+		for (AActor* Monster : Monsters)
+		{
+			AMonster* CurrentMonster = Cast<AMonster>(Monster);
+			if (CurrentMonster)
+			{
+				CurrentMonster->Destroy();
+			}
+		}
+	}
+
 	if (CompleteClass)
 	{
 		UUserWidget* CompleteWidget = CreateWidget<UUserWidget>(GetWorld(), CompleteClass);
@@ -414,8 +489,18 @@ void AChaosDungeonMode::EndGame()
 
 void AChaosDungeonMode::Fail()
 {
-	GetWorld()->GetTimerManager().ClearTimer(CommonSpawnTimer);
-	GetWorld()->GetTimerManager().ClearTimer(NamedSpawnTimer);
+	if (GetWorld()->GetTimerManager().IsTimerActive(StageTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(StageTimer);
+	}
+	if (GetWorld()->GetTimerManager().IsTimerActive(CommonSpawnTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CommonSpawnTimer);
+	}
+	if (GetWorld()->GetTimerManager().IsTimerActive(NamedSpawnTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(NamedSpawnTimer);
+	}
 	TArray<AActor*> Monsters;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), MonsterClass, Monsters);
 

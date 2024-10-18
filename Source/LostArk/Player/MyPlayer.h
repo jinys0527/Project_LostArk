@@ -101,6 +101,7 @@ public:
 
 	uint8 bIsEquipped : 1;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	uint8 bIsAttack : 1; 
 
 	UPROPERTY(BlueprintReadOnly)

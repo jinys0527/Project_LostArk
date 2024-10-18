@@ -18,6 +18,12 @@ public:
 	// Sets default values for this character's properties
 	AMonsterSpawner();
 
+
+	virtual void SpawnMonster(EMonsterType MonsterType);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void SpawnMonster(EMonsterType MonsterType, FVector SpanwerCenter);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -42,6 +48,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<ANamedMonster> NamedMonsterClass;
-
-	void SpawnMonster(EMonsterType MonsterType);
 };

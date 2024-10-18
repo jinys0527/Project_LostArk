@@ -65,7 +65,6 @@ void ALostArkGameMode::Tick(float DeltaSeconds)
 
 void ALostArkGameMode::StartLoadingCheck()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Start"));
 	GetWorld()->GetTimerManager().SetTimer(LoadingTimer, this, &ALostArkGameMode::CheckLoadingComplete, 0.6f, true);
 }
 
@@ -73,7 +72,6 @@ void ALostArkGameMode::CheckLoadingComplete()
 {
 	if (LoadingTrixionWidget->bLoadComplete)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Complete"));
 		GetWorld()->GetTimerManager().ClearTimer(LoadingTimer);
 
 		ALostArkPlayerController* PlayerController = Cast<ALostArkPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
@@ -86,7 +84,6 @@ void ALostArkGameMode::CheckLoadingComplete()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Loopback"));
 		LoadingTrixionWidget->Loopback();
 	}
 }

@@ -26,7 +26,11 @@ public:
 
 	int32 StageCommonCount;
 
+	int32 StageAliveCommonCount;
+
 	int32 StageNamedCount;
+
+	int32 StageAliveNamedCount;
 
 	int32 StageCommonLimit;
 

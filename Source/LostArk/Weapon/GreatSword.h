@@ -6,6 +6,8 @@
 #include "Weapon.h"
 #include "GreatSword.generated.h"
 
+class AChaosDungeonCore;
+
 /**
  * 
  */
@@ -32,4 +34,7 @@ public:
 	) override;
 
 	uint8 bIsOverlapped : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AChaosDungeonCore* OverlappedCore;
 };

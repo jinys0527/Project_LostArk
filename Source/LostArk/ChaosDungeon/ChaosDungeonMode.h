@@ -19,6 +19,7 @@ class ABossMonster;
 class ABossMonsterSpawner;
 class AChaosDungeonPortal;
 class ULoadingLogHillWidget;
+class AChaosDungeonCore;
 
 /**
  *
@@ -125,4 +126,27 @@ public:
 	TSubclassOf<ABossMonsterSpawner> BossMonsterSpawnerClass;
 
 	FTimerHandle StageTimer;
+
+	FTimerHandle CoreTimer;
+
+	FTimerHandle DestroySpawnerTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FVector> CoreLocations;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AChaosDungeonCore> ChaosDungeonCoreClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AMonsterSpawner> MonsterSpawnerClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector SpawnerLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 bIsExistCore : 1;
+
+	uint8 bIsSpawnerDestroyed : 1;
+
+	uint8 bIsCompleteSpawn : 1;
 };

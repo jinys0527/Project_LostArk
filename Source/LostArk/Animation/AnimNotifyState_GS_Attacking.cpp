@@ -7,6 +7,7 @@
 #include "../Monster/Monster.h"
 #include "../Tag/LostArkGameplayTag.h"
 #include "AbilitySystemComponent.h"
+#include "../ChaosDungeon/ChaosDungeonCore.h"
 
 
 void UAnimNotifyState_GS_Attacking::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
@@ -27,6 +28,11 @@ void UAnimNotifyState_GS_Attacking::NotifyEnd(USkeletalMeshComponent* MeshComp, 
 	if (Player)
 	{
 		Player->bIsAttack = false;
+		if (Player->EquippedGreatSword->OverlappedCore)
+		{
+			Player->EquippedGreatSword->OverlappedCore->Hitted = false;
+		}
+		
 		if (Player->Target.Num() != 0)
 		{
 			for (AMonster* Monster : Player->Target)

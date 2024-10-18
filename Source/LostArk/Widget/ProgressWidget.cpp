@@ -49,8 +49,8 @@ void UProgressWidget::UpdateProgress(EMonsterType MonsterType)
 		}
 		int32 iCurrentPercent = round(CurrentPercent * 100);
 
-		ChaosDungeonProgressBar->SetPercent(CurrentPercent);
+		ChaosDungeonProgressBar->SetPercent(FMath::Clamp(CurrentPercent, 0.0f, 1.0f));
 		OnProgressBarChanged.Broadcast(CurrentPercent);
-		ProgressValue->SetText(FText::FromString(FString::FromInt(iCurrentPercent)));
+		ProgressValue->SetText(FText::FromString(FString::FromInt(FMath::Clamp(iCurrentPercent, 0, 100))));
 	}
 }
