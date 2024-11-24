@@ -258,6 +258,8 @@ void ALostArkPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ALostArkPlayerController::OnTouchReleased);
 
 		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Started, this, &ALostArkPlayerController::InteractionStarted);
+		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Completed, this, &ALostArkPlayerController::InteractionReleased);
+		EnhancedInputComponent->BindAction(InteractionAction, ETriggerEvent::Canceled, this, &ALostArkPlayerController::InteractionReleased);
 
 		EnhancedInputComponent->BindAction(TestAction, ETriggerEvent::Triggered, this, &ALostArkPlayerController::TestTriggered);
 	}
@@ -393,6 +395,14 @@ void ALostArkPlayerController::InteractionStarted()
 	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
 
 	MyPlayer->bIsInteractioned = true;
+}
+
+void ALostArkPlayerController::InteractionReleased()
+{
+	APawn* ControlledPawn = GetPawn();
+	AMyPlayer* MyPlayer = Cast<AMyPlayer>(ControlledPawn);
+
+	MyPlayer->bIsInteractioned = false;
 }
 
 void ALostArkPlayerController::TestTriggered()
